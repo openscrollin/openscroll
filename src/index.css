@@ -1,0 +1,81 @@
+/* Import Nunito Sans Font */
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Nunito Sans', sans-serif;
+  background-color: #f9f9f7;
+  color: #374151;
+  line-height: 1.8;
+}
+
+/* Headings */
+h1, h2, h3, h4, h5, h6 {
+  color: #1a1a1a;
+  font-weight: 700;
+}
+
+/* Links */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Buttons */
+button, a.button {
+  font-family: 'Nunito Sans', sans-serif;
+  background-color: #2c2c2c;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+button:hover, a.button:hover {
+  opacity: 0.9;
+}
+
+/* Footer Styling */
+footer {
+  background-color: #0b0b0b;
+  color: #d1d5db;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Card Styling */
+.card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+}
+
+/* Sections */
+section {
+  padding: 6rem 2rem;
+}
+
+/* Scroll Animation */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeInUp 1s ease forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
