@@ -1,119 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 function EditArticle() {
   const { id } = useParams();
   const navigate = useNavigate();
-
-  const [articleData, setArticleData] = useState({
-    title: '',
-    shortDesc: '',
-    body: '',
-    price: '',
-  });
+  const [loading, setLoading] = useState(true);
+  const [article, setArticle] = useState(null);
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const categories = ['Technology', 'Design', 'Marketing', 'Business', 'Education', 'Lifestyle'];
 
   useEffect(() => {
-    const allArticles = JSON.parse(localStorage.getItem('openscroll_articles')) || [];
-    const writerData = JSON.parse(localStorage.getItem('openscroll_current_writer'));
-    if (!writerData) {
-      navigate('/writer/login');
-      return;
-    }
-
-    const writerArticles = allArticles.filter(
-      (article) => article.authorEmail === writerData.email
-    );
-
-    const currentArticle = writerArticles[parseInt(id)];
-
-    if (currentArticle) {
-      setArticleData({
-        title: currentArticle.title || '',
-        shortDesc: currentArticle.shortDesc || '',
-        body: currentArticle.body || '',
-        price: currentArticle.price || '',
+    fetch(`http://localhost:5002/api/articles/public/${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setArticle(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError('Failed to load article');
+        setLoading(false);
       });
-    } else {
-      navigate('/writer/dashboard');
-    }
-  }, [id, navigate]);
+  }, [id]);
 
   const handleChange = (e) => {
-    setArticleData({ ...articleData, [e.target.name]: e.target.value });
+    setArticle({ ...article, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccessMessage('');
+    const token = localStorage.getItem('openscroll_token');
 
-    if (!articleData.title.trim() || !articleData.shortDesc.trim() || !articleData.body.trim()) {
-      setError('Please fill all required fields.');
-      return;
-    }
+    try {
+      const res = await fetch(`http://localhost:5002/api/articles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(article),
+      });
 
-    const allArticles = JSON.parse(localStorage.getItem('openscroll_articles')) || [];
-    const writerData = JSON.parse(localStorage.getItem('openscroll_current_writer'));
-    const writerArticles = allArticles.filter(
-      (article) => article.authorEmail === writerData.email
-    );
+      const result = await res.json();
 
-    const realArticleIndex = allArticles.findIndex(
-      (article) => article.authorEmail === writerData.email &&
-      writerArticles.indexOf(article) === parseInt(id)
-    );
-
-    if (realArticleIndex !== -1) {
-      allArticles[realArticleIndex] = {
-        ...allArticles[realArticleIndex],
-        ...articleData,
-        updatedAt: new Date().toISOString(),
-      };
-
-      localStorage.setItem('openscroll_articles', JSON.stringify(allArticles));
-
-      setSuccessMessage('Article updated successfully! Redirecting...');
-      setTimeout(() => {
-        navigate('/writer/dashboard');
-      }, 2000);
-    } else {
-      setError('Error updating article.');
+      if (res.ok) {
+        setSuccess('✅ Article updated successfully!');
+        setTimeout(() => navigate('/writer/dashboard'), 1500);
+      } else {
+        setError(result.message || 'Failed to update article');
+      }
+    } catch (err) {
+      setError('Server error while updating article');
     }
   };
 
-  const container = {
-    minHeight: '100vh',
-    backgroundColor: '#f9f9f7',
-    fontFamily: "'Nunito Sans', sans-serif",
+  if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (!article) return <div style={{ padding: '2rem' }}>❌ Article not found</div>;
+
+  // UI Styles
+  const formContainer = {
     padding: '2rem',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-  };
-
-  const formBox = {
-    backgroundColor: '#ffffff',
-    padding: '2.5rem',
+    maxWidth: '700px',
+    margin: 'auto',
+    fontFamily: "'Nunito Sans', sans-serif",
+    backgroundColor: '#fff',
     borderRadius: '16px',
     boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
-    width: '100%',
-    maxWidth: '600px',
-  };
-
-  const heading = {
-    fontSize: '2rem',
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: '2rem',
   };
 
   const label = {
     fontWeight: '600',
     marginBottom: '0.5rem',
     marginTop: '1rem',
-    fontSize: '1rem',
+    display: 'block',
   };
 
   const input = {
@@ -126,20 +87,21 @@ function EditArticle() {
   };
 
   const textarea = {
-    padding: '1rem',
-    width: '100%',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-    fontSize: '1rem',
+    ...input,
     height: '150px',
-    marginBottom: '1rem',
     resize: 'vertical',
+  };
+
+  const select = {
+    ...input,
+    cursor: 'pointer',
+    backgroundColor: '#fff',
   };
 
   const button = {
     padding: '1rem',
     backgroundColor: '#2c2c2c',
-    color: '#ffffff',
+    color: '#fff',
     border: 'none',
     borderRadius: '8px',
     fontWeight: '600',
@@ -149,75 +111,83 @@ function EditArticle() {
     marginTop: '1rem',
   };
 
-  const errorText = {
-    color: 'red',
-    fontSize: '0.9rem',
-    textAlign: 'center',
-    marginTop: '1rem',
-  };
-
-  const successText = {
-    color: 'green',
-    fontSize: '1rem',
-    textAlign: 'center',
-    marginTop: '1rem',
-  };
-
   return (
-    <>
+    <div style={formContainer}>
+      <h2>Edit Article</h2>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {success && <p style={{ color: 'green' }}>{success}</p>}
 
-
-      <div style={container}>
-        <div style={formBox}>
-          <h1 style={heading}>Edit Your Article</h1>
-
-          <form onSubmit={handleSubmit}>
-            <label style={label}>Article Title</label>
-            <input
-              type="text"
-              name="title"
-              style={input}
-              value={articleData.title}
-              onChange={handleChange}
+      <form onSubmit={handleSubmit}>
+        {article.coverImage && (
+          <>
+            <label style={label}>Cover Image</label>
+            <img
+              src={article.coverImage}
+              alt="cover"
+              style={{ width: '100%', height: 'auto', borderRadius: '8px', marginBottom: '1rem' }}
             />
+          </>
+        )}
 
-            <label style={label}>Short Description</label>
-            <input
-              type="text"
-              name="shortDesc"
-              style={input}
-              value={articleData.shortDesc}
-              onChange={handleChange}
-            />
+        <label style={label}>Article Title</label>
+        <input
+          name="title"
+          value={article.title || ''}
+          onChange={handleChange}
+          style={input}
+          required
+        />
 
-            <label style={label}>Full Article Body</label>
-            <textarea
-              name="body"
-              style={textarea}
-              value={articleData.body}
-              onChange={handleChange}
-            />
+        <label style={label}>Short Description</label>
+        <input
+          name="shortDesc"
+          value={article.shortDesc || ''}
+          onChange={handleChange}
+          style={input}
+        />
 
-            <label style={label}>Price (₹)</label>
-            <input
-              type="number"
-              name="price"
-              style={input}
-              value={articleData.price}
-              onChange={handleChange}
-              min="0"
-            />
+        <label style={label}>Summary</label>
+        <input
+          name="summary"
+          value={article.summary || ''}
+          onChange={handleChange}
+          style={input}
+        />
 
-            <button type="submit" style={button}>
-              Update Article
-            </button>
+        <label style={label}>Category</label>
+        <select
+          name="category"
+          value={article.category || ''}
+          onChange={handleChange}
+          style={select}
+        >
+          <option value="">Select category</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
+        </select>
 
-            {error && <div style={errorText}>{error}</div>}
-            {successMessage && <div style={successText}>{successMessage}</div>}
-          </form>
-        </div>
-      </div>
-    </>
+        <label style={label}>Full Article Body</label>
+        <textarea
+          name="body"
+          value={article.body || ''}
+          onChange={handleChange}
+          style={textarea}
+        />
+
+        <label style={label}>Price (₹)</label>
+        <input
+          type="number"
+          name="price"
+          value={article.price || ''}
+          onChange={handleChange}
+          style={input}
+          min="0"
+        />
+
+        <button type="submit" style={button}>Update Article</button>
+      </form>
+    </div>
   );
 }
 

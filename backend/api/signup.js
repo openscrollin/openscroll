@@ -1,35 +1,53 @@
-import { MongoClient } from 'mongodb';
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User'); // Make sure this path is correct
+require('dotenv').config();
 
-const MONGO_URI = process.env.MONGO_URI;
-const client = new MongoClient(MONGO_URI);
+router.post('/', async (req, res) => {
+  try {
+    const { fullName, email, password, role } = req.body;
 
-export default async function handler(req, res) {
-  if (req.method === 'POST') {
-    try {
-      const { fullName, email, password } = req.body;
-
-      if (!fullName || !email || !password) {
-        return res.status(400).json({ message: 'Missing fields' });
-      }
-
-      await client.connect();
-      const db = client.db('openscroll');
-      const usersCollection = db.collection('users');
-
-      const existingUser = await usersCollection.findOne({ email });
-
-      if (existingUser) {
-        return res.status(409).json({ message: 'User already exists' });
-      }
-
-      await usersCollection.insertOne({ fullName, email, password });
-
-      return res.status(201).json({ message: 'Signup successful' });
-    } catch (error) {
-      console.error(error);
-      return res.status(500).json({ message: 'Server error' });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already registered.' });
     }
-  } else {
-    res.status(405).json({ message: 'Method not allowed' });
+
+    // Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user with name = fullName
+    const user = new User({
+      name: fullName, // ✅ this ensures the name is stored
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    await user.save();
+
+    // Create JWT token
+    const token = jwt.sign(
+      { userId: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Return user data
+    res.status(201).json({
+      token,
+      user: {
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (err) {
+    console.error('Signup error:', err);
+    res.status(500).json({ message: 'Server error during signup.' });
   }
-}
+});
+
+module.exports = router;
