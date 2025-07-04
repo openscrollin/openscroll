@@ -1,5 +1,5 @@
 node_modules
-backend/config/firebaseServiceAccountKey.json
+#backend/config/firebaseServiceAccountKey.json
 backend/.env
 # macOS system files
 .DS_Store
