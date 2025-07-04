@@ -5,10 +5,11 @@ import ManageArticles from './pages/ManageArticles';
 import ManageUsers from './pages/ManageUsers';
 import AdPromotions from './pages/AdPromotions';
 import AdminSettings from './pages/AdminSettings';
+import CarouselManager from './pages/CarouselManager';
+import HeroImageManager from './pages/HeroImageManager'; // ✅ NEW IMPORT
 
 function AdminDashboard() {
   const navigate = useNavigate();
-  //const location = useLocation();
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
   useEffect(() => {
@@ -90,6 +91,8 @@ function AdminDashboard() {
         <Link to="/admin/articles" style={navItem}>Manage Articles</Link>
         <Link to="/admin/users" style={navItem}>Manage Users</Link>
         <Link to="/admin/ads" style={navItem}>Ad Promotions</Link>
+        <Link to="/admin/carousel" style={navItem}>Carousel Manager</Link>
+        <Link to="/admin/hero-image" style={navItem}>Hero Image</Link> {/* ✅ NEW LINK */}
         <Link to="/admin/settings" style={navItem}>Settings</Link>
       </aside>
 
@@ -104,6 +107,8 @@ function AdminDashboard() {
           <Route path="articles" element={<ManageArticles />} />
           <Route path="users" element={<ManageUsers />} />
           <Route path="ads" element={<AdPromotions />} />
+          <Route path="carousel" element={<CarouselManager />} />
+          <Route path="hero-image" element={<HeroImageManager />} /> {/* ✅ NEW ROUTE */}
           <Route path="settings" element={<AdminSettings />} />
         </Routes>
       </main>

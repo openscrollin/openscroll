@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useCallback } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { UserProvider, UserContext } from './UserContext';
 import { debounce } from 'lodash'; // Import debounce
@@ -23,6 +23,7 @@ import PurchasePage from './pages/PurchasePage';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ReaderDashboard from './pages/ReaderDashboard';
 import Favorites from './pages/Favorites';
+import ReaderOtpLogin from './ReaderOtpLogin';
 
 // Writer Pages
 import WriterLogin from './WriterLogin';
@@ -32,6 +33,8 @@ import WriterDashboard from './WriterDashboard';
 import AddArticle from './AddArticle';
 import EditArticle from './EditArticle';
 import WriterProfile from './WriterProfile';
+import ManageArticles from './ManageArticles';
+import WriterEarnings from './WriterEarnings';
 
 // Reader
 import ReaderProfile from './ReaderProfile';
@@ -44,6 +47,12 @@ import AdminProtectedRoute from './admin/AdminProtectedRoute';
 
 // Article Details
 import ArticleDetails from './ArticleDetails';
+
+// 🔑 Firebase Phone Login Page
+import PhoneLogin from './PhoneLogin';
+
+// Role Selection
+import RoleSelection from './RoleSelection'; // adjust the path if needed
 
 function AppContent() {
   const location = useLocation();
@@ -59,35 +68,26 @@ function AppContent() {
 
   // Routes where navbar should be hidden
   const hideNavbarRoutes = [
-    '/login', '/signup', '/forgot-password',
+    '/login', '/signup', '/forgot-password', '/phone-login',
     '/writer/login', '/writer/signup', '/writer/forgot-password',
     '/admin/login'
   ];
   const shouldHideNavbar = hideNavbarRoutes.includes(location.pathname) || location.pathname.startsWith('/admin');
 
-    // Use lodash.debounce for better debouncing
-    const handleScroll = useCallback(
-      debounce(() => {
-        if (window.scrollY > lastScrollY && window.scrollY > 100) { // added scrollY > 100
-          setShowNavbar(false);
-        } else {
-          setShowNavbar(true);
-        }
-        setLastScrollY(window.scrollY);
-      }, 100),
-      [lastScrollY]
-    );
-
-  // Scroll-based navbar visibility toggle (debounced)
+  // Scroll-based navbar visibility toggle (refactored to avoid ESLint warning)
   useEffect(() => {
-    const handleRealScroll = () => {
-      handleScroll();
-    };
-    window.addEventListener('scroll', handleRealScroll);
-    return () => {
-        window.removeEventListener('scroll', handleRealScroll);
-    };
-}, [handleScroll]);
+    const handleScroll = debounce(() => {
+      if (window.scrollY > lastScrollY && window.scrollY > 100) {
+        setShowNavbar(false);
+      } else {
+        setShowNavbar(true);
+      }
+      setLastScrollY(window.scrollY);
+    }, 100);
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   // Route-based redirection protection
   useEffect(() => {
@@ -115,6 +115,7 @@ function AppContent() {
         <Route path="/articles/:id" element={<ArticleDetails />} />
         <Route path="/favorites" element={<Favorites />} />
         <Route path="/reader/purchases" element={<ReaderPurchases />} />
+        <Route path="/reader/otp-login" element={<ReaderOtpLogin />} />
 
         <Route
           path="/profile"
@@ -134,6 +135,7 @@ function AppContent() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/phone-login" element={<PhoneLogin />} />
         <Route
           path="/reader/dashboard"
           element={
@@ -171,19 +173,16 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route path="/writer/articles" element={<ManageArticles />} />
+        <Route path="/writer/earnings" element={<WriterEarnings />} />
         <Route path="/writers/:email" element={<WriterProfile />} />
 
         {/* Admin Pages */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
-        <Route
-          path="/admin/*"
-          element={
-            <AdminProtectedRoute>
-              <AdminDashboard />
-            </AdminProtectedRoute>
-          }
-        />
+        <Route path="/admin/*" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+
+        {/* Role Selection */}
+        <Route path="/roles" element={<RoleSelection />} />
 
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />
@@ -203,4 +202,3 @@ function App() {
 }
 
 export default App;
-

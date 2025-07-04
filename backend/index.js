@@ -14,6 +14,9 @@ const writerEarningsRoute = require('./routes/writerEarnings');
 const readerPurchasesRoute = require('./routes/readerPurchases');
 const adminRoutes = require('./routes/admin');            // ✅ Protected admin features
 const adminAuthRoutes = require('./routes/adminAuth');    // ✅ Admin login route
+const aiEnhanceRoute = require('./routes/aiEnhance');                // ✅ AI-enhancement route added
+const heroImageRoutes = require('./routes/heroImage');
+const carouselRoutes = require('./routes/carouselRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -37,6 +40,9 @@ app.use('/api/articles', articleRoutes); // ✅ Article route properly placed he
 app.use('/api/payment', paymentRoutes);
 app.use('/api/writer', writerEarningsRoute);
 app.use('/api/reader', readerPurchasesRoute);
+app.use('/api', aiEnhanceRoute); // ✅ Mount AI route here
+app.use('/api/admin/hero-image', heroImageRoutes);
+app.use('/api/admin/carousel-images', carouselRoutes); // ✅ put this FIRST
 app.use('/api/admin', adminRoutes);       // ✅ Admin protected routes (e.g. /feature-article)
 app.use('/api/admin', adminAuthRoutes);   // ✅ Admin login route (/login)
 

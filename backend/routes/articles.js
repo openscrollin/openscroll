@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Article = require('../models/Article');
 const authMiddleware = require('../middleware/authMiddleware');
+const verifyAdmin = require('../middleware/verifyAdmin');
 
 // POST /api/articles (JWT Protected)
 router.post('/', authMiddleware, async (req, res) => {
@@ -9,6 +10,7 @@ router.post('/', authMiddleware, async (req, res) => {
     const {
       title,
       shortDesc,
+      excerpt, // Accept excerpt as alias for shortDesc
       summary,
       body,
       price,
@@ -21,9 +23,12 @@ router.post('/', authMiddleware, async (req, res) => {
 
     const { email: tokenEmail } = req.user;
 
-    // Validate required fields
-    if (!title || !shortDesc || !body || !price || !coverImage || !authorEmail || !category) {
-      return res.status(400).json({ message: 'All fields are required' });
+    // Accept either shortDesc or excerpt for flexibility
+    const desc = shortDesc || excerpt;
+
+    // Validate required fields (allow drafts without coverImage/price)
+    if (!title || !desc || !body || !authorEmail || !category) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
     // Author identity check
@@ -33,11 +38,11 @@ router.post('/', authMiddleware, async (req, res) => {
 
     const newArticle = new Article({
       title,
-      shortDesc,
+      shortDesc: desc,
       summary: summary || '',
       body,
-      price,
-      coverImage,
+      price: price || '0',
+      coverImage: coverImage || '',
       authorEmail,
       authorName,
       category,
@@ -87,11 +92,13 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
     const updatedData = {
       title: req.body.title,
-      shortDesc: req.body.shortDesc,
+      shortDesc: req.body.shortDesc || req.body.excerpt,
       summary: req.body.summary,
       body: req.body.body,
       price: req.body.price,
       category: req.body.category,
+      coverImage: req.body.coverImage,
+      updatedAt: new Date().toISOString()
     };
 
     await Article.findByIdAndUpdate(id, updatedData, { new: true });
@@ -130,7 +137,6 @@ router.get('/public/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error while fetching article' });
   }
 });
-const verifyAdmin = require('../middleware/verifyAdmin');
 
 // GET /api/articles/all – Admin-only route for dashboard
 router.get('/all', verifyAdmin, async (req, res) => {

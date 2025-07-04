@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from './firebase';
+import { UserContext } from './UserContext';
 
 function WriterSignup() {
   const [fullName, setFullName] = useState('');
@@ -9,6 +12,8 @@ function WriterSignup() {
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
+
+  const { login: setUserContext } = useContext(UserContext);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -31,7 +36,7 @@ function WriterSignup() {
     }
 
     try {
-      const res = await fetch('http://localhost:5002/api/auth/signup', {
+      const res = await fetch('https://openscroll-backend.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fullName, email, password, role: 'writer' })
@@ -43,17 +48,36 @@ function WriterSignup() {
         throw new Error(data.message || 'Signup failed');
       }
 
-      localStorage.setItem('openscroll_token', data.token);
-      localStorage.setItem('openscroll_current_writer', JSON.stringify(data.user));
+      localStorage.setItem('writerToken', data.token);
+      localStorage.setItem('openscroll_current_user', JSON.stringify(data.user));
+      setUserContext(data.user, data.token);
       navigate('/writer/dashboard');
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     }
   };
 
+  const handleGoogleSignup = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const token = await user.getIdToken();
+
+      const userData = { name: user.displayName, email: user.email, role: 'writer' };
+      localStorage.setItem('writerToken', token);
+      localStorage.setItem('openscroll_current_user', JSON.stringify(userData));
+      setUserContext(userData, token);
+      navigate('/writer/dashboard');
+    } catch (error) {
+      setError('Google signup failed');
+    }
+  };
+
   return (
     <div style={container(isMobile)}>
-      {/* Left Side */}
+      {/* Moving grid background */}
+      <div className="moving-grid-bg"></div>
       <div style={leftSide(isMobile)}>
         <div>
           <h1 style={heading(isMobile)}>Become a Writer!</h1>
@@ -67,56 +91,101 @@ function WriterSignup() {
             <button type="submit" style={buttonStyle}>Sign Up</button>
           </form>
 
+          <button onClick={handleGoogleSignup} style={googleButtonStyle}>
+            <img
+              src="https://developers.google.com/identity/images/g-logo.png"
+              alt="Google"
+              style={{ height: '18px', marginRight: '10px',background: '#fff',borderRadius: '50%',padding: '2px',boxShadow: '0 0 4px #0003' }}
+            />
+            Sign up with Google
+          </button>
+
           {error && <div style={errorText}>{error}</div>}
 
           <div style={smallText}>
             Already a writer?{' '}
-            <Link to="/writer/login" style={{ color: '#2c2c2c', fontWeight: '600' }}>
+            <Link to="/writer/login" style={{ color: '#d0f330', fontWeight: '600' }}>
               Log In
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Right Side */}
       <div style={rightSide(isMobile)}>
         <h2 style={tagline(isMobile)}>Share Your Knowledge With the World</h2>
       </div>
+      {/* Moving grid CSS only, responsive */}
+      <style>{`
+        .moving-grid-bg {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .moving-grid-bg::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            repeating-linear-gradient(to right, #d0f33010 0 1px, transparent 1px 60px),
+            repeating-linear-gradient(to bottom, #d0f33010 0 1px, transparent 1px 60px);
+          animation: cyberbgmove 8s linear infinite;
+          z-index: 0;
+        }
+        @media (max-width: 900px) {
+          .moving-grid-bg::before {
+            background:
+              repeating-linear-gradient(to right, #d0f33010 0 1px, transparent 1px 36px),
+              repeating-linear-gradient(to bottom, #d0f33010 0 1px, transparent 1px 36px);
+          }
+        }
+        @keyframes cyberbgmove {
+          0%   { background-position: 0 0, 0 0; }
+          100% { background-position: 60px 60px, 60px 60px; }
+        }
+      `}</style>
     </div>
   );
 }
 
-// ======= Styles =======
 const container = (mobile) => ({
   display: 'flex',
   flexDirection: mobile ? 'column' : 'row',
   minHeight: '100vh',
-  backgroundColor: '#f9f9f7',
+  backgroundColor: '#07080a',
   fontFamily: "'Nunito Sans', sans-serif",
+  position: 'relative',
+  zIndex: 1,
+  overflow: 'hidden',
 });
 
 const leftSide = (mobile) => ({
   flex: 1,
-  backgroundColor: '#ffffff',
+  backgroundColor: 'rgba(20,22,16,0.96)',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  padding: mobile ? '2rem 1.5rem' : '4rem 3rem',
+  padding: mobile ? '2rem 1rem' : '4rem 3rem',
+  zIndex: 1,
+  borderRadius: mobile ? '0 0 2rem 2rem' : '2rem 0 0 2rem',
+  boxShadow: '0 0 32px #d0f33022',
+  minWidth: 0,
 });
 
 const rightSide = (mobile) => ({
   flex: 1,
-  backgroundImage: `url('/hero-background.jpg')`,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
+  background: 'linear-gradient(135deg, #10120a 60%, #07080a 100%)',
   color: 'white',
-  display: 'flex',
+  display: mobile ? 'none' : 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   flexDirection: 'column',
   textAlign: 'center',
   padding: '2rem',
-  minHeight: mobile ? '250px' : 'auto',
+  minHeight: mobile ? '0' : 'auto',
+  zIndex: 1,
+  borderRadius: mobile ? '2rem 2rem 0 0' : '0 2rem 2rem 0',
+  boxShadow: '0 0 32px #d0f33022',
 });
 
 const formGroup = {
@@ -129,20 +198,23 @@ const formGroup = {
 const inputStyle = {
   padding: '0.8rem',
   borderRadius: '8px',
-  border: '1px solid #d1d5db',
+  border: '1px solid #d0f33055',
   fontSize: '1rem',
   outline: 'none',
   width: '100%',
   maxWidth: '400px',
   margin: '0 auto',
+  background: '#181a13',
+  color: '#fff',
+  boxShadow: '0 0 8px #d0f33011',
 };
 
 const buttonStyle = {
   padding: '0.9rem',
   borderRadius: '8px',
-  backgroundColor: '#2c2c2c',
-  color: 'white',
-  fontWeight: '600',
+  backgroundColor: '#d0f330',
+  color: '#111',
+  fontWeight: '700',
   fontSize: '1rem',
   cursor: 'pointer',
   border: 'none',
@@ -151,26 +223,53 @@ const buttonStyle = {
   maxWidth: '400px',
   marginLeft: 'auto',
   marginRight: 'auto',
+  boxShadow: '0 0 16px #d0f33044',
+  transition: 'background 0.18s, color 0.18s',
+};
+
+const googleButtonStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '8px',
+  padding: '0.8rem 1rem',
+  border: '1px solid #d0f33055',
+  borderRadius: '6px',
+  backgroundColor: '#181a13',
+  color: '#fff',
+  fontWeight: '500',
+  fontSize: '1rem',
+  cursor: 'pointer',
+  marginTop: '1rem',
+  width: '100%',
+  maxWidth: '400px',
+  marginLeft: 'auto',
+  marginRight: 'auto',
+  boxShadow: '0 0 8px #d0f33011',
+  transition: 'background 0.18s, color 0.18s',
 };
 
 const smallText = {
   marginTop: '1.5rem',
   fontSize: '0.9rem',
-  color: '#6b7280',
+  color: '#b6c2b6',
   textAlign: 'center',
 };
 
 const heading = (mobile) => ({
   fontSize: mobile ? '1.8rem' : '2.2rem',
   fontWeight: '700',
-  color: '#1a1a1a',
+  color: '#d0f330',
   textAlign: 'center',
+  letterSpacing: '-1px',
+  marginBottom: '0.5rem',
+  textShadow: '0 0 12px #d0f33033',
 });
 
 const subheading = (mobile) => ({
   marginTop: '0.5rem',
   fontSize: mobile ? '0.95rem' : '1rem',
-  color: '#6b7280',
+  color: '#b6c2b6',
   textAlign: 'center',
 });
 
@@ -180,13 +279,16 @@ const tagline = (mobile) => ({
   maxWidth: '400px',
   lineHeight: '1.3',
   textAlign: 'center',
+  color: '#fff',
+  textShadow: '0 0 12px #d0f33022',
 });
 
 const errorText = {
-  color: 'red',
+  color: '#ff4d4f',
   fontSize: '0.9rem',
   marginTop: '1rem',
   textAlign: 'center',
+  fontWeight: 600,
 };
 
 export default WriterSignup;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import WriterNavbar from './WriterNavbar';
+import TextEditorWithAI from './TextEditorWithAI'; // ✅ AI Editor added
 
 function NewArticle() {
   const navigate = useNavigate();
@@ -120,15 +121,12 @@ function NewArticle() {
     marginBottom: '1rem',
   };
 
-  const textarea = {
-    padding: '1rem',
-    width: '100%',
-    borderRadius: '8px',
-    border: '1px solid #ccc',
-    fontSize: '1rem',
-    height: '150px',
+  const editorWrapper = {
     marginBottom: '1rem',
-    resize: 'vertical',
+    border: '1px solid #ccc',
+    borderRadius: '8px',
+    padding: '1rem',
+    backgroundColor: '#fff',
   };
 
   const button = {
@@ -194,12 +192,9 @@ function NewArticle() {
             />
 
             <label style={label}>Full Article Body</label>
-            <textarea
-              placeholder="Write your full article here..."
-              style={textarea}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-            />
+            <div style={editorWrapper}>
+              <TextEditorWithAI value={body} onChange={setBody} />
+            </div>
 
             <label style={label}>Price (₹)</label>
             <input

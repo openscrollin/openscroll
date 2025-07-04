@@ -5,10 +5,10 @@ function Insights() {
   const [articles, setArticles] = useState([]);
 
   useEffect(() => {
-    fetch('http://localhost:5002/api/articles/public')  // ✅ Replace with actual backend URL if deployed
+    fetch('https://openscroll-backend.onrender.com/api/articles/public')
       .then((res) => res.json())
       .then((data) => {
-        const topArticles = data.slice(0, 4); // Show top 3 insights
+        const topArticles = data.slice(0, 4);
         setArticles(topArticles);
       })
       .catch((err) => console.error('Failed to load insights:', err));
@@ -16,8 +16,10 @@ function Insights() {
 
   const sectionStyle = {
     padding: '6rem 2rem',
-    backgroundColor: '#ffffff',
+    //backgroundColor: '#07080a', // Use solid background
     textAlign: 'center',
+    position: 'relative',
+    zIndex: 1,
   };
 
   const headingStyle = {
@@ -32,23 +34,17 @@ function Insights() {
     color: '#6b7280',
     marginBottom: '3rem',
   };
+
   const grid = {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
     gap: '1.5rem',
   };
-  //const gridStyle = {
-    //display: 'flex',
-    //flexWrap: 'wrap',
-    //gap: '2rem',
-    //justifyContent: 'center',
-  //};
 
   return (
-    <section className="fade-in-up" style={sectionStyle}>
+    <section className="insights-section fade-in-up" style={sectionStyle}>
       <h2 style={headingStyle}>Insights for Excellence</h2>
       <p style={subtitleStyle}>Curated articles to fuel your knowledge journey.</p>
-
       <div style={grid}>
         {articles.map((article) => (
           <ArticleCard key={article._id} article={article} />

@@ -40,17 +40,19 @@ function ArticleCard({ article }) {
   };
 
   const card = {
-    backgroundColor: '#ffffff',
-    borderRadius: '16px',
-    boxShadow: '0 6px 24px rgba(0, 0, 0, 0.06)',
+    background: 'rgba(15, 15, 30, 0.55)', // glassmorphism background
+    borderRadius: '18px',
+    boxShadow: '0 0 24px 4px #d0f33033, 0 2px 8px #0002',
+    border: '2px solid #d0f33099', // glowing border
+    backdropFilter: 'blur(18px) saturate(1.5)',
+    WebkitBackdropFilter: 'blur(18px) saturate(1.5)',
     overflow: 'hidden',
     fontFamily: "'Nunito Sans', sans-serif",
-    transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+    transition: 'transform 0.25s ease, box-shadow 0.25s ease, border-color 0.18s',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
     textAlign: 'left',
-    border: '1px solid #f3f4f6',
     position: 'relative',
   };
 
@@ -73,12 +75,13 @@ function ArticleCard({ article }) {
     display: 'flex',
     flexDirection: 'column',
     gap: '0.75rem',
+    color: '#fff', // add this line to make all text in content white
   };
 
   const title = {
     fontSize: '1.125rem',
     fontWeight: 700,
-    color: '#1f2937',
+    color: '#fff', // changed from #1f2937 to white
     marginBottom: '0.1rem',
     lineHeight: '1.4',
   };
@@ -111,7 +114,7 @@ function ArticleCard({ article }) {
 
   const author = {
     fontSize: '0.85rem',
-    color: '#6b7280',
+    color: '#e5e7eb', // lighter gray for better contrast on dark bg
     textDecoration: 'none',
     marginTop: '0.2rem',
   };
@@ -166,13 +169,15 @@ function ArticleCard({ article }) {
           const img = e.currentTarget.querySelector('img');
           img.style.transform = 'scale(1.05)';
           e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.08)';
+          e.currentTarget.style.boxShadow = '0 0 48px 12px #d0f33077, 0 12px 28px rgba(0,0,0,0.08)';
+          e.currentTarget.style.borderColor = '#d0f330';
         }}
         onMouseLeave={(e) => {
           const img = e.currentTarget.querySelector('img');
           img.style.transform = 'scale(1)';
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 0, 0, 0.06)';
+          e.currentTarget.style.boxShadow = '0 0 24px 4px #d0f33033, 0 6px 24px rgba(0, 0, 0, 0.06)';
+          e.currentTarget.style.borderColor = '#d0f33099';
         }}
       >
         <div style={imageWrapper}>

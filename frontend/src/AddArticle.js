@@ -1,262 +1,638 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-//import WriterNavbar from './WriterNavbar';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
 
 function AddArticle() {
   const navigate = useNavigate();
+  const quillRef = useRef(null);
 
-  const [mode, setMode] = useState('write'); // 'write' or 'upload'
-  const [coverImage, setCoverImage] = useState(null);
+  // State
   const [title, setTitle] = useState('');
-  const [shortDesc, setShortDesc] = useState('');
-  const [summary, setSummary] = useState('');
-  const [category, setCategory] = useState('');
   const [body, setBody] = useState('');
-  const [articleFile, setArticleFile] = useState(null);
+  const [excerpt, setExcerpt] = useState('');
+  const [coverImage, setCoverImage] = useState('');
+  const [category, setCategory] = useState('');
+  const [isPremium, setIsPremium] = useState(false);
   const [price, setPrice] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const categories = ['Technology', 'Design', 'Marketing', 'Business', 'Education', 'Lifestyle'];
+  // Example categories (customize as needed)
+  const categories = [
+    '',
+    'Technology',
+    'Science',
+    'Fiction',
+    'Non-fiction',
+    'AI',
+    'Cyberpunk',
+    'Culture',
+    'Tutorial',
+    'Opinion',
+    'Other'
+  ];
 
+  // File/image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    setCoverImage(file);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setCoverImage(reader.result);
+    reader.readAsDataURL(file);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file && (file.type === 'application/pdf' || file.name.endsWith('.docx'))) {
-      setArticleFile(file);
-    } else {
-      setError('Only PDF or DOCX files are allowed.');
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Save as draft
+  const saveAsDraft = async () => {
+    setSaving(true);
     setError('');
     setSuccessMessage('');
+    await handleSubmit(false);
+    setSaving(false);
+  };
 
-    if (!title || !shortDesc || !summary || !category || (mode === 'write' ? !body : !articleFile)) {
-      setError('Please fill in all required fields.');
+  // Publish
+  const publishArticle = async () => {
+    setPublishing(true);
+    setError('');
+    setSuccessMessage('');
+    await handleSubmit(true);
+    setPublishing(false);
+  };
+
+  // Main submit logic
+  const handleSubmit = async (publish) => {
+    if (!title.trim() || !body.trim()) {
+      setError('Title and content are required.');
       return;
     }
-
-    const writerData = JSON.parse(localStorage.getItem('openscroll_current_writer'));
-    const token = localStorage.getItem('openscroll_token');
-
+    if (!category) {
+      setError('Please select a category.');
+      return;
+    }
+    const writerData = JSON.parse(localStorage.getItem('openscroll_current_user'));
+    const token = localStorage.getItem('writerToken');
+    console.log('Token being sent:', token);
     if (!writerData || !token) {
       setError('User not authenticated.');
       return;
     }
-
     const articleData = {
-      title,
-      shortDesc,
-      summary,
+      title: title.trim(),
+      body,
+      excerpt: excerpt || body.replace(/<[^>]+>/g, '').substring(0, 200) + '...',
       category,
-      body: mode === 'write' ? body : '',
-      price: price ? price : '0',
-      authorName: writerData.name,
+      coverImage,
+      price: isPremium ? price : '0',
+      isPremium,
+      isPublished: publish,
+      authorName: writerData.name || writerData.fullName,
       authorEmail: writerData.email,
       createdAt: new Date().toISOString(),
     };
-
-    if (coverImage) {
-      const reader = new FileReader();
-      reader.readAsDataURL(coverImage);
-      reader.onloadend = async () => {
-        articleData.coverImage = reader.result;
-        await saveArticle(articleData, token);
-      };
-    } else {
-      await saveArticle(articleData, token);
-    }
-  };
-
-  const saveArticle = async (articleData, token) => {
     try {
-      const formData = new FormData();
-      for (const key in articleData) {
-        formData.append(key, articleData[key]);
-      }
-
-      if (mode === 'upload' && articleFile) {
-        formData.append('articleFile', articleFile);
-      }
-
-      const response = await fetch('http://localhost:5002/api/articles', {
+      const response = await fetch('http://localhost:5002/api/addArticle', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         },
-        body: formData,
+        body: JSON.stringify(articleData),
       });
-
       const result = await response.json();
-
       if (response.ok) {
-        setSuccessMessage('Article published successfully! Redirecting...');
-        setTimeout(() => navigate('/writer/dashboard'), 2000);
+        setSuccessMessage(publish ? 'Article published successfully! Redirecting...' : 'Draft saved!');
+        setTimeout(() => navigate('/writer/dashboard'), 1800);
       } else {
-        setError(result.message || 'Failed to publish article.');
+        setError(result.message || 'Failed to save article.');
       }
     } catch (err) {
-      console.error(err);
       setError('Something went wrong. Please try again later.');
     }
   };
 
-  const container = {
-    minHeight: '100vh',
-    backgroundColor: '#f9fafb',
-    fontFamily: "'Nunito Sans', sans-serif",
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: '2rem',
-  };
+  useEffect(() => {
+    // Remove AI suggestion trigger
+    // if (body.length > 100) {
+    //   generateAISuggestions(body);
+    // }
+  }, [body]);
 
-  const formBox = {
-    backgroundColor: '#fff',
-    borderRadius: '20px',
-    boxShadow: '0 6px 24px rgba(0,0,0,0.06)',
-    padding: '2rem',
-    width: '100%',
-    maxWidth: '720px',
+  // --- Styles ---
+  const glass = {
+    background: 'rgba(24,26,19,0.85)',
+    borderRadius: 16,
+    boxShadow: '0 4px 32px #d0f33011',
+    border: '1.5px solid #d0f33022',
+    padding: 24,
+    marginBottom: 0,
   };
-
-  const heading = {
-    fontSize: '1.75rem',
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: '1.5rem',
-    textAlign: 'center',
-  };
-
-  const label = {
-    display: 'block',
-    fontWeight: '600',
-    fontSize: '0.95rem',
-    color: '#374151',
-    marginBottom: '0.4rem',
-    marginTop: '1rem',
-  };
-
+  const neon = { boxShadow: '0 0 24px #d0f33055' };
   const input = {
     width: '100%',
     padding: '0.9rem 1rem',
     fontSize: '1rem',
     borderRadius: '12px',
     border: '1px solid #e5e7eb',
-    backgroundColor: '#f9fafb',
-    marginBottom: '0.75rem',
-  };
-
-  const select = {
-    ...input,
-    backgroundColor: '#fff',
-    cursor: 'pointer',
-  };
-
-  const button = {
-    marginTop: '1.5rem',
-    padding: '1rem',
-    width: '100%',
-    backgroundColor: 'black',
+    backgroundColor: '#181a13',
     color: '#fff',
-    fontWeight: '700',
+    marginBottom: '0.75rem',
+    outline: 'none'
+  };
+  const label = {
+    display: 'block',
+    fontWeight: '600',
+    fontSize: '0.95rem',
+    color: '#b6c2b6',
+    marginBottom: '0.4rem',
+    marginTop: '1rem',
+  };
+  const button = {
+    marginTop: 0,
+    padding: '0.8rem 1.5rem',
+    background: 'linear-gradient(90deg, #d0f330 60%, #b0e000 100%)',
+    color: '#111',
+    fontWeight: 700,
     fontSize: '1rem',
     border: 'none',
     borderRadius: '12px',
     cursor: 'pointer',
+    marginLeft: 8,
+    marginRight: 0,
+    boxShadow: '0 0 16px #d0f33044',
+    transition: 'background 0.18s, color 0.18s'
   };
-
-  const messageText = {
-    fontSize: '0.95rem',
-    textAlign: 'center',
-    marginTop: '1rem',
-  };
-
-  const toggleWrapper = {
-    display: 'flex',
-    gap: '1rem',
-    marginTop: '1rem',
-    marginBottom: '1rem',
+  const ghostBtn = {
+    ...button,
+    background: 'none',
+    color: '#d0f330',
+    boxShadow: 'none',
+    border: '1.5px solid #d0f33044',
+    marginLeft: 0,
+    marginRight: 8,
   };
 
   return (
-    <>
-      
-      <div style={container}>
-        <div style={formBox}>
-          <h1 style={heading}>Publish a New Article</h1>
-          <form onSubmit={handleSubmit}>
-            <label style={label}>Cover Image</label>
-            <input type="file" accept="image/*" style={input} onChange={handleImageUpload} />
+    <div
+      style={{
+        maxWidth: 1200,
+        margin: '0 auto',
+        padding: '2rem 1rem',
+        minHeight: '100vh',
+        background: '#07080a',
+        fontFamily: "'Nunito Sans', sans-serif",
+        position: 'relative',
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 32,
+          flexWrap: 'wrap',
+          gap: 16,
+        }}
+      >
+        <div>
+          <h1
+            style={{
+              fontSize: '2.2rem',
+              fontWeight: 700,
+              color: '#fff',
+              marginBottom: 6,
+            }}
+          >
+            Editor
+          </h1>
+          <p
+            style={{
+              color: '#d0f330',
+              opacity: 0.7,
+              fontFamily: 'monospace',
+              fontWeight: 600,
+              letterSpacing: 2,
+            }}
+          >
+            NEURAL.WRITING.ASSISTANT
+          </p>
+        </div>
+        {/* REMOVE BUTTONS FROM HEADER */}
+        {/* <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <button style={ghostBtn} onClick={saveAsDraft} disabled={saving}>
+            Save Draft
+          </button>
+          <button style={button} onClick={publishArticle} disabled={publishing}>
+            Publish
+          </button>
+        </div> */}
+      </div>
 
-            <label style={label}>Article Title</label>
-            <input type="text" placeholder="Enter article title" style={input} value={title} onChange={(e) => setTitle(e.target.value)} />
-
-            <label style={label}>Short Description</label>
-            <input type="text" placeholder="Enter short description" style={input} value={shortDesc} onChange={(e) => setShortDesc(e.target.value)} />
-
-            <label style={label}>Summary</label>
-            <input type="text" placeholder="Add a summary in one line" style={input} value={summary} onChange={(e) => setSummary(e.target.value)} />
-
-            <label style={label}>Category</label>
-            <select style={select} value={category} onChange={(e) => setCategory(e.target.value)}>
-              <option value="">Select category</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-
-            <div style={toggleWrapper}>
-              <label>
-                <input
-                  type="radio"
-                  value="write"
-                  checked={mode === 'write'}
-                  onChange={() => setMode('write')}
-                /> Write Article
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  value="upload"
-                  checked={mode === 'upload'}
-                  onChange={() => setMode('upload')}
-                /> Upload PDF/DOCX
-              </label>
+      <div
+        className="add-article-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '3fr 1fr',
+          gap: 32,
+        }}
+      >
+        {/* Main Editor */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Title */}
+          <div style={{ ...glass, ...neon }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                marginBottom: 12,
+                flexDirection: 'row',
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Enter your article title..."
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                style={{
+                  ...input,
+                  fontSize: 22,
+                  fontWeight: 600,
+                  marginBottom: 0,
+                  flex: 1,
+                  minWidth: 0,
+                }}
+              />
+              {/* Removed the AI Enhance button */}
             </div>
-
-            {mode === 'write' ? (
-              <>
-                <label style={label}>Full Article Body</label>
-                <ReactQuill value={body} onChange={setBody} style={{ marginBottom: '1rem' }} />
-              </>
-            ) : (
-              <>
-                <label style={label}>Upload File</label>
-                <input type="file" accept=".pdf,.doc,.docx" style={input} onChange={handleFileUpload} />
-              </>
-            )}
-
-            <label style={label}>Price (₹)</label>
-            <input type="number" placeholder="Enter price or 0 for free" style={input} value={price} onChange={(e) => setPrice(e.target.value)} min="0" />
-
-            <button type="submit" style={button}>Publish Article</button>
-
-            {error && <div style={{ ...messageText, color: 'red' }}>{error}</div>}
-            {successMessage && <div style={{ ...messageText, color: 'green' }}>{successMessage}</div>}
-          </form>
+          </div>
+          {/* Content */}
+          <div style={{ ...glass, ...neon }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: 12,
+                flexWrap: 'wrap',
+                gap: 8,
+              }}
+            >
+              <span style={{ color: '#fff', fontWeight: 600, fontSize: 17 }}>
+                Content
+              </span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  flexWrap: 'wrap',
+                }}
+              >
+                {/* 
+                <button style={ghostBtn} onClick={() => setShowAiPanel(!showAiPanel)}>
+                  AI Assistant
+                </button>
+                */}
+                <span
+                  style={{
+                    color: '#b6c2b6',
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                  }}
+                >
+                  {body.length} chars
+                </span>
+              </div>
+            </div>
+            <div style={{ marginBottom: 50 }}>
+              <ReactQuill
+                value={body}
+                onChange={setBody}
+                ref={quillRef}
+                style={{
+                  height: 260,
+                  background: '#181a13',
+                  color: '#fff',
+                  borderRadius: 12,
+                }}
+              />
+            </div>
+          </div>
+          {/* AI Suggestions */}
+          {/* 
+          {aiSuggestions.length > 0 && (
+            <div style={{ ...glass, ...neon }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  marginBottom: 12,
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 20,
+                    color: '#d0f330',
+                    animation: 'pulse 1s infinite alternate',
+                  }}
+                >
+                  ⚡
+                </span>
+                <span
+                  style={{
+                    color: '#fff',
+                    fontWeight: 600,
+                    fontSize: 17,
+                  }}
+                >
+                  AI Suggestions
+                </span>
+              </div>
+              <div>
+                {aiSuggestions.map((s, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: '#181a13',
+                      border: '1px solid #d0f33022',
+                      borderRadius: 10,
+                      padding: '0.7rem 1rem',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color:
+                          s.type === 'grammar'
+                            ? '#f87171'
+                            : s.type === 'style'
+                            ? '#38bdf8'
+                            : '#a78bfa',
+                        background:
+                          s.type === 'grammar'
+                            ? '#f8717122'
+                            : s.type === 'style'
+                            ? '#38bdf822'
+                            : '#a78bfa22',
+                        borderRadius: 8,
+                        padding: '2px 8px',
+                        marginRight: 8,
+                      }}
+                    >
+                      {s.type.toUpperCase()}
+                    </span>
+                    <span style={{ color: '#b6c2b6', fontSize: 14 }}>
+                      Replace "
+                      <span style={{ color: '#f87171' }}>{s.text}</span>" with "
+                      <span style={{ color: '#d0f330' }}>{s.suggestion}</span>"
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          */}
+        </div>
+        {/* Sidebar */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+          {/* Article Settings */}
+          <div style={{ ...glass, ...neon }}>
+            <span
+              style={{
+                color: '#fff',
+                fontWeight: 600,
+                fontSize: 17,
+                marginBottom: 16,
+                display: 'block',
+              }}
+            >
+              Article Settings
+            </span>
+            {/* Excerpt */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={label}>Summary</label>
+              <textarea
+                value={excerpt}
+                onChange={e => setExcerpt(e.target.value)}
+                placeholder="Brief description of your article..."
+                style={{ ...input, height: 80, resize: 'none' }}
+              />
+              {/* <button style={ghostBtn} onClick={generateExcerpt}>
+                Auto-generate
+              </button> */}
+            </div>
+            {/* Cover Image */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={label}>Cover Image</label>
+              <input
+                type="file"
+                accept="image/*"
+                style={input}
+                onChange={handleImageUpload}
+              />
+              {coverImage && (
+                <img
+                  src={coverImage}
+                  alt="cover"
+                  style={{
+                    width: '100%',
+                    borderRadius: 10,
+                    marginTop: 8,
+                    maxHeight: 120,
+                    objectFit: 'cover',
+                  }}
+                />
+              )}
+            </div>
+            {/* Category Dropdown */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={label}>Category</label>
+              <select
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                style={{ ...input, marginBottom: 0 }}
+              >
+                {categories.map((cat, idx) => (
+                  <option key={idx} value={cat}>
+                    {cat ? cat : 'Select a category'}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Premium */}
+            <div
+              style={{
+                borderTop: '1px solid #d0f33022',
+                paddingTop: 16,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 12,
+                }}
+              >
+                <label
+                  style={{
+                    color: '#b6c2b6',
+                    fontWeight: 600,
+                    fontSize: 15,
+                  }}
+                >
+                  Premium Article
+                </label>
+                <button
+                  onClick={() => setIsPremium(!isPremium)}
+                  style={{
+                    width: 44,
+                    height: 24,
+                    borderRadius: 12,
+                    background: isPremium ? '#d0f330' : '#444',
+                    border: 'none',
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'block',
+                      width: 18,
+                      height: 18,
+                      borderRadius: '50%',
+                      background: '#fff',
+                      position: 'absolute',
+                      left: isPremium ? 22 : 4,
+                      top: 3,
+                      transition: 'left 0.2s',
+                    }}
+                  />
+                </button>
+              </div>
+              {isPremium && (
+                <div>
+                  <label style={label}>Price (INR)</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={price}
+                    onChange={e => setPrice(e.target.value)}
+                    style={{ ...input, paddingLeft: 32 }}
+                    min="0"
+                  />
+                  <span
+                    style={{
+                      position: 'absolute',
+                      marginLeft: -28,
+                      marginTop: 12,
+                      color: '#b6c2b6',
+                    }}
+                  >
+                    ₹
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
-    </>
+      {/* Error/Success */}
+      {(error || successMessage) && (
+        <div
+          style={{
+            marginTop: 24,
+            textAlign: 'center',
+            color: error ? 'red' : 'green',
+            fontWeight: 600,
+            fontSize: 16,
+          }}
+        >
+          {error || successMessage}
+        </div>
+      )}
+
+      {/* Floating Action Bar for Save/Publish */}
+      <div className="floating-action-bar">
+        <button style={ghostBtn} onClick={saveAsDraft} disabled={saving}>
+          Save Draft
+        </button>
+        <button style={button} onClick={publishArticle} disabled={publishing}>
+          Publish
+        </button>
+      </div>
+
+      <style>{`
+        @media (max-width: 900px) {
+          .add-article-grid {
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+        }
+        @media (max-width: 600px) {
+          .add-article-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .add-article-grid > div {
+            padding: 0 !important;
+          }
+          input, textarea, select {
+            font-size: 1rem !important;
+          }
+        }
+        @media (max-width: 500px) {
+          h1 {
+            font-size: 1.3rem !important;
+          }
+          .add-article-grid {
+            gap: 8px !important;
+          }
+        }
+        .floating-action-bar {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 100;
+          background: rgba(24,26,19,0.97);
+          box-shadow: 0 -2px 24px #000a;
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          padding: 1rem 0.5rem;
+          border-top: 1.5px solid #d0f33022;
+        }
+        @media (min-width: 700px) {
+          .floating-action-bar {
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 700px;
+            border-radius: 16px 16px 0 0;
+            margin-bottom: 12px;
+          }
+        }
+        @keyframes pulse {
+          0% { text-shadow: 0 0 8px #d0f33055; }
+          100% { text-shadow: 0 0 24px #d0f330; }
+        }
+      `}</style>
+    </div>
   );
 }
 
