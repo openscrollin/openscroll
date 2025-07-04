@@ -101,7 +101,7 @@ function Articles() {
         {/* + New Article: full width and OUTSIDE card */}
         <button
           className="cyber-btn btn-full"
-          onClick={() => window.location = '/WriterLogin'}
+          onClick={() => window.location = '/writer/new-article'}
           style={{ margin: '18px 0 8px 0' }}
         >
           + New Article
