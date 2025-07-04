@@ -8,13 +8,13 @@ const errorHandler = require('./middleware/errorHandler');
 // Route files
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
-const articleRoutes = require('./routes/articles');       // ✅ Article routes
+const articleRoutes = require('./routes/articles');
 const paymentRoutes = require('./routes/payment');
 const writerEarningsRoute = require('./routes/writerEarnings');
 const readerPurchasesRoute = require('./routes/readerPurchases');
-const adminRoutes = require('./routes/admin');            // ✅ Protected admin features
-const adminAuthRoutes = require('./routes/adminAuth');    // ✅ Admin login route
-const aiEnhanceRoute = require('./routes/aiEnhance');                // ✅ AI-enhancement route added
+const adminRoutes = require('./routes/admin');
+const adminAuthRoutes = require('./routes/adminAuth');
+const aiEnhanceRoute = require('./routes/aiEnhance');
 const heroImageRoutes = require('./routes/heroImage');
 const carouselRoutes = require('./routes/carouselRoutes');
 
@@ -24,34 +24,48 @@ const PORT = process.env.PORT || 5002;
 // ✅ Connect to DB
 connectDB();
 
-// ✅ Middleware
+// ✅ CORS setup for both localhost and deployed frontend
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://openscroll.vercel.app'
+];
+
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// ✅ Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ API Routes (after middleware)
+// ✅ API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/articles', articleRoutes); // ✅ Article route properly placed here
+app.use('/api/articles', articleRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/writer', writerEarningsRoute);
 app.use('/api/reader', readerPurchasesRoute);
-app.use('/api', aiEnhanceRoute); // ✅ Mount AI route here
+app.use('/api', aiEnhanceRoute);
 app.use('/api/admin/hero-image', heroImageRoutes);
-app.use('/api/admin/carousel-images', carouselRoutes); // ✅ put this FIRST
-app.use('/api/admin', adminRoutes);       // ✅ Admin protected routes (e.g. /feature-article)
-app.use('/api/admin', adminAuthRoutes);   // ✅ Admin login route (/login)
+app.use('/api/admin/carousel-images', carouselRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminAuthRoutes);
 
-// ✅ Root Route
+// ✅ Root route
 app.get('/', (req, res) => {
   res.send('✅ Backend is working!');
 });
 
-// ✅ Global Error Handler
+// ✅ Global error handler
 app.use(errorHandler);
 
 // ✅ Start server
