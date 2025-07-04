@@ -4,3 +4,4 @@ backend/.env
 # macOS system files
 .DS_Store
 backend/.DS_Store
+backend/config/firebaseServiceAccountKey.json
