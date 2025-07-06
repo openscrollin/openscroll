@@ -35,7 +35,7 @@ function ManageArticles() {
     const token = localStorage.getItem('writerToken');
     if (!writer || !token) return;
     try {
-      const res = await fetch(`http://localhost:5002/api/writer/earnings/${writer.email}`, {
+      const res = await fetch(`https://openscroll-backend.onrender.com/api/writer/earnings/${writer.email}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -76,7 +76,7 @@ function ManageArticles() {
     const token = localStorage.getItem('writerToken');
     if (!writer || !token) return;
     try {
-      await fetch(`http://localhost:5002/api/articles/${articleId}`, {
+      await fetch(`https://openscroll-backend.onrender.com/api/articles/${articleId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -93,7 +93,7 @@ function ManageArticles() {
     const token = localStorage.getItem('writerToken');
     if (!writer || !token) return;
     try {
-      await fetch(`http://localhost:5002/api/articles/${articleId}`, {
+      await fetch(`https://openscroll-backend.onrender.com/api/articles/${articleId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ isPublished: !currentStatus }),

@@ -319,8 +319,8 @@ function ArticleDetails() {
     const fetchData = async () => {
       try {
         const [articleRes, allRes] = await Promise.all([
-          fetch(`http://localhost:5002/api/articles/public/${id}`),
-          fetch('http://localhost:5002/api/articles/public'),
+          fetch('https://openscroll-backend.onrender.com/api/articles/public/${id}'),
+          fetch('https://openscroll-backend.onrender.com/api/articles/public'),
         ]);
 
         const articleData = await articleRes.json();

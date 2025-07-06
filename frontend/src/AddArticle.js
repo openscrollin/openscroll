@@ -93,7 +93,7 @@ function AddArticle() {
       createdAt: new Date().toISOString(),
     };
     try {
-      const response = await fetch('http://localhost:5002/api/addArticle', {
+      const response = await fetch('https://openscroll-backend.onrender.com/api/addArticle', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

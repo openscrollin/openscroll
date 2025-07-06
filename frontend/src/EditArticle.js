@@ -12,7 +12,7 @@ function EditArticle() {
   const categories = ['Technology', 'Design', 'Marketing', 'Business', 'Education', 'Lifestyle'];
 
   useEffect(() => {
-    fetch(`http://localhost:5002/api/articles/public/${id}`)
+    fetch(`https://openscroll-backend.onrender.com/api/articles/public/${id}`)
       .then((res) => res.json())
       .then((data) => {
         setArticle(data);
@@ -34,7 +34,7 @@ function EditArticle() {
     const token = localStorage.getItem('openscroll_token');
 
     try {
-      const res = await fetch(`http://localhost:5002/api/articles/${id}`, {
+      const res = await fetch(`https://openscroll-backend.onrender.com/api/articles/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

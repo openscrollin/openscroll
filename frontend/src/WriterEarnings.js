@@ -28,7 +28,7 @@ function WriterEarnings() {
       window.location.href = '/writer/login';
       return;
     }
-    fetch(`http://localhost:5002/api/writer/earnings/${writer.email}`, {
+    fetch(`https://openscroll-backend.onrender.com/api/writer/earnings/${writer.email}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(res => res.json())
