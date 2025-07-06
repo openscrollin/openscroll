@@ -17,6 +17,7 @@ const adminAuthRoutes = require('./routes/adminAuth');
 const aiEnhanceRoute = require('./routes/aiEnhance');
 const heroImageRoutes = require('./routes/heroImage');
 const carouselRoutes = require('./routes/carouselRoutes');
+const addArticleRoute = require('./api/addArticle'); // ✅ Added
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -24,7 +25,7 @@ const PORT = process.env.PORT || 5002;
 // ✅ Connect to DB
 connectDB();
 
-// ✅ CORS setup for both localhost and deployed frontend
+// ✅ CORS setup
 const allowedOrigins = [
   'http://localhost:3000',
   'https://openscroll.vercel.app'
@@ -59,6 +60,7 @@ app.use('/api/admin/hero-image', heroImageRoutes);
 app.use('/api/admin/carousel-images', carouselRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', adminAuthRoutes);
+app.use('/api/addArticle', addArticleRoute); // ✅ Mounted addArticle
 
 // ✅ Root route
 app.get('/', (req, res) => {

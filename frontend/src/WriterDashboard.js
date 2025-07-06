@@ -68,7 +68,7 @@ function WriterDashboard() {
     <div style={{ padding: '2rem', minHeight: '100vh', background: '#07080a', fontFamily: "'Nunito Sans', sans-serif" }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div>
-          <h1 style={{ fontSize: '2.2rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 700, color: '#fff',marginBottom: '0.5rem' }}>
             Writer Dashboard
           </h1>
           <p style={{ color: '#d0f330', opacity: 0.7, fontFamily: 'monospace', fontWeight: 600, letterSpacing: 2 }}>
