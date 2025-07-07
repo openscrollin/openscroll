@@ -7,6 +7,7 @@ import { auth } from './firebase';
 function WriterLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [redirectReady, setRedirectReady] = useState(false);
@@ -76,7 +77,6 @@ function WriterLogin() {
 
   return (
     <div style={container(isMobile)}>
-      {/* Moving grid background */}
       <div className="moving-grid-bg"></div>
       <div style={leftSide(isMobile)}>
         <div>
@@ -92,14 +92,33 @@ function WriterLogin() {
               style={inputStyle}
               required
             />
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={inputStyle}
-              required
-            />
+            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ ...inputStyle, paddingRight: '3rem' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '0.75rem',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'gray',
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
             <button type="submit" style={buttonStyle}>Log In</button>
           </form>
 
@@ -107,7 +126,7 @@ function WriterLogin() {
             <img
               src="https://developers.google.com/identity/images/g-logo.png"
               alt="Google"
-              style={{ height: '18px', marginRight: '10px',background: '#fff',borderRadius: '50%',padding: '2px',boxShadow: '0 0 4px #0003' }}
+              style={{ height: '18px', marginRight: '10px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 0 4px #0003' }}
             />
             Continue with Google
           </button>
@@ -132,7 +151,7 @@ function WriterLogin() {
       <div style={rightSide(isMobile)}>
         <h2 style={tagline(isMobile)}>Your Words Deserve an Audience. Start Writing Today.</h2>
       </div>
-      {/* Moving grid CSS only, responsive */}
+
       <style>{`
         .moving-grid-bg {
           position: fixed;

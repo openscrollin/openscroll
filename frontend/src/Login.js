@@ -14,6 +14,7 @@ function Login() {
   const isWriter = location.pathname.includes('/writer');
 
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
@@ -78,7 +79,6 @@ function Login() {
 
   return (
     <div style={container(isMobile)}>
-      {/* Moving grid background */}
       <div className="moving-grid-bg"></div>
       <div style={leftSide(isMobile)}>
         <div>
@@ -95,15 +95,36 @@ function Login() {
               style={inputStyle}
               required
             />
-            <input
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              style={inputStyle}
-              required
-            />
+
+            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+              <input
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={formData.password}
+                onChange={handleChange}
+                style={{ ...inputStyle, paddingRight: '3rem' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '0.75rem',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'gray',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+
             <button type="submit" style={buttonStyle}>Log In</button>
           </form>
 
@@ -112,7 +133,7 @@ function Login() {
               <img
                 src="https://developers.google.com/identity/images/g-logo.png"
                 alt="Google"
-                style={{ height: '18px', marginRight: '10px',background: '#fff',borderRadius: '50%',padding: '2px',boxShadow: '0 0 4px #0003' }}
+                style={{ height: '18px', marginRight: '10px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 0 4px #0003' }}
               />
               Continue with Google
             </button>
@@ -138,7 +159,7 @@ function Login() {
       <div style={rightSide(isMobile)}>
         <h2 style={tagline(isMobile)}>Your Words Deserve an Audience. Start Writing Today.</h2>
       </div>
-      {/* Moving grid CSS only, responsive */}
+
       <style>{`
         .moving-grid-bg {
           position: fixed;
@@ -172,7 +193,7 @@ function Login() {
   );
 }
 
-// Responsive container and card styles
+// --- styles (unchanged from your version) ---
 const container = (mobile) => ({
   display: 'flex',
   flexDirection: mobile ? 'column' : 'row',

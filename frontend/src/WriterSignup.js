@@ -9,6 +9,8 @@ function WriterSignup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
@@ -76,7 +78,6 @@ function WriterSignup() {
 
   return (
     <div style={container(isMobile)}>
-      {/* Moving grid background */}
       <div className="moving-grid-bg"></div>
       <div style={leftSide(isMobile)}>
         <div>
@@ -86,8 +87,63 @@ function WriterSignup() {
           <form style={formGroup} onSubmit={handleSignup}>
             <input type="text" placeholder="Full Name" style={inputStyle} value={fullName} onChange={(e) => setFullName(e.target.value)} required />
             <input type="email" placeholder="Email" style={inputStyle} value={email} onChange={(e) => setEmail(e.target.value)} required />
-            <input type="password" placeholder="Password" style={inputStyle} value={password} onChange={(e) => setPassword(e.target.value)} required />
-            <input type="password" placeholder="Confirm Password" style={inputStyle} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+
+            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ ...inputStyle, paddingRight: '3rem' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '0.75rem',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'gray',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+
+            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                style={{ ...inputStyle, paddingRight: '3rem' }}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  right: '0.75rem',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: 'gray',
+                  fontSize: '0.8rem',
+                  cursor: 'pointer',
+                }}
+              >
+                {showConfirmPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+
             <button type="submit" style={buttonStyle}>Sign Up</button>
           </form>
 
@@ -95,7 +151,7 @@ function WriterSignup() {
             <img
               src="https://developers.google.com/identity/images/g-logo.png"
               alt="Google"
-              style={{ height: '18px', marginRight: '10px',background: '#fff',borderRadius: '50%',padding: '2px',boxShadow: '0 0 4px #0003' }}
+              style={{ height: '18px', marginRight: '10px', background: '#fff', borderRadius: '50%', padding: '2px', boxShadow: '0 0 4px #0003' }}
             />
             Sign up with Google
           </button>
@@ -114,7 +170,7 @@ function WriterSignup() {
       <div style={rightSide(isMobile)}>
         <h2 style={tagline(isMobile)}>Share Your Knowledge With the World</h2>
       </div>
-      {/* Moving grid CSS only, responsive */}
+
       <style>{`
         .moving-grid-bg {
           position: fixed;
@@ -148,6 +204,7 @@ function WriterSignup() {
   );
 }
 
+// --- styles (unchanged from your original) ---
 const container = (mobile) => ({
   display: 'flex',
   flexDirection: mobile ? 'column' : 'row',

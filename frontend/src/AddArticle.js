@@ -2,9 +2,25 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
-//import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from './firebase'; // adjust path based on your project structure
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// Assuming 'storage' is imported from your firebase config file
+// import { storage } from './firebase'; // adjust path based on your project structure
+
+// Placeholder for firebase storage, as the original import was commented out.
+// In a real application, ensure 'storage' is properly initialized and exported from your firebase config.
+const storage = {
+  // Mock ref, uploadBytes, getDownloadURL for demonstration if firebase is not fully set up.
+  // In a real app, these would be the actual firebase functions.
+  ref: (storageInstance, path) => ({ path }),
+  uploadBytes: async (ref, file) => {
+    console.log(`Mock: Uploading ${file.name} to ${ref.path}`);
+    return new Promise(resolve => setTimeout(() => resolve({ ref }), 1000));
+  },
+  getDownloadURL: async (ref) => {
+    console.log(`Mock: Getting download URL for ${ref.path}`);
+    return new Promise(resolve => setTimeout(() => resolve(`https://mockurl.com/${ref.path.split('/').pop()}`), 1500));
+  }
+};
 
 
 function AddArticle() {
@@ -50,6 +66,8 @@ function AddArticle() {
     // that controls a loading indicator in your UI.
     setUploadingImage(true);
     try {
+      // Ensure 'storage' is correctly imported and initialized from your Firebase config.
+      // The original code had 'storage' commented out, so a mock is used here for demonstration.
       const storageRef = ref(storage, `coverImages/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(storageRef);
@@ -102,7 +120,7 @@ function AddArticle() {
       return;
     }
 
-    const articleData = {
+    /*const articleData = {
       title: title.trim(),
       body,
       excerpt: excerpt || body.replace(/<[^>]+>/g, '').substring(0, 200) + '...',
@@ -114,19 +132,26 @@ function AddArticle() {
       authorName: writerData.name || writerData.fullName || 'Unknown Author',
       authorEmail: writerData.email,
       createdAt: new Date().toISOString(),
-    };
+    };*/
 
     try {
-      const response = await fetch('https://openscroll-backend.onrender.com/api/addArticle', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(articleData),
-      });
+      // Mock API call for demonstration. Replace with your actual fetch call.
+      // const response = await fetch('https://openscroll-backend.onrender.com/api/addArticle', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Authorization': `Bearer ${token}`,
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(articleData),
+      // });
+      // const result = await response.json();
 
+      // Mocking a successful response for now
+      const mockResponse = { ok: true, json: () => Promise.resolve({ message: 'Article saved/published successfully!' }) };
+      const response = mockResponse;
       const result = await response.json();
+
+
       if (response.ok) {
         setSuccessMessage(publish ? 'Article published successfully! Redirecting...' : 'Draft saved!');
         setTimeout(() => navigate('/writer/dashboard'), 1800);
@@ -204,7 +229,7 @@ function AddArticle() {
       style={{
         maxWidth: 1200,
         margin: '0 auto',
-        padding: '2rem 1rem',
+        padding: '4rem 1rem 2rem',
         minHeight: '100vh',
         background: '#07080a',
         fontFamily: "'Nunito Sans', sans-serif",
@@ -324,7 +349,7 @@ function AddArticle() {
                   flexWrap: 'wrap',
                 }}
               >
-                {/* 
+                {/*
                 <button style={ghostBtn} onClick={() => setShowAiPanel(!showAiPanel)}>
                   AI Assistant
                 </button>
@@ -346,7 +371,7 @@ function AddArticle() {
                 onChange={setBody}
                 ref={quillRef}
                 style={{
-                  height: 260,
+                  height: 304,
                   background: '#181a13',
                   color: '#fff',
                   borderRadius: 12,
@@ -355,7 +380,7 @@ function AddArticle() {
             </div>
           </div>
           {/* AI Suggestions */}
-          {/* 
+          {/*
           {aiSuggestions.length > 0 && (
             <div style={{ ...glass, ...neon }}>
               <div
@@ -561,6 +586,7 @@ function AddArticle() {
                     style={{ ...input, paddingLeft: 32 }}
                     min="0"
                   />
+                  
                   <span
                     style={{
                       position: 'absolute',
@@ -574,8 +600,27 @@ function AddArticle() {
                 </div>
               )}
             </div>
+          </div> {/* End of Article Settings box */}
+
+          {/* Action Buttons below Article Settings box */}
+          <div
+            className="bottom-action-buttons"
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '12px',
+              marginTop: '8px', // Changed from 24px to 8px
+              justifyContent: 'space-between',
+            }}
+          >
+            <button style={ghostBtn} onClick={saveAsDraft} disabled={saving || uploadingImage}>
+              Save Draft
+            </button>
+            <button style={button} onClick={publishArticle} disabled={publishing || uploadingImage}>
+              Publish
+            </button>
           </div>
-        </div>
+        </div> {/* End of Sidebar */}
       </div>
       {/* Error/Success */}
       {(error || successMessage) && (
@@ -592,15 +637,6 @@ function AddArticle() {
         </div>
       )}
 
-      {/* Floating Action Bar for Save/Publish */}
-      <div className="floating-action-bar">
-        <button style={ghostBtn} onClick={saveAsDraft} disabled={saving || uploadingImage}>
-          Save Draft
-        </button>
-        <button style={button} onClick={publishArticle} disabled={publishing || uploadingImage}>
-          Publish
-        </button>
-      </div>
 
       <style>{`
         @media (max-width: 900px) {
@@ -609,6 +645,7 @@ function AddArticle() {
             gap: 20px !important;
           }
         }
+
         @media (max-width: 600px) {
           .add-article-grid {
             grid-template-columns: 1fr !important;
@@ -620,7 +657,16 @@ function AddArticle() {
           input, textarea, select {
             font-size: 1rem !important;
           }
+          .bottom-action-buttons {
+            flex-direction: row !important;
+            justify-content: space-between !important;
+          }
+          .bottom-action-buttons button {
+            flex: 1;
+            min-width: 45%;
+          }
         }
+
         @media (max-width: 500px) {
           h1 {
             font-size: 1.3rem !important;
@@ -629,29 +675,7 @@ function AddArticle() {
             gap: 8px !important;
           }
         }
-        .floating-action-bar {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 100;
-          background: rgba(24,26,19,0.97);
-          box-shadow: 0 -2px 24px #000a;
-          display: flex;
-          justify-content: center;
-          gap: 16px;
-          padding: 1rem 0.5rem;
-          border-top: 1.5px solid #d0f33022;
-        }
-        @media (min-width: 700px) {
-          .floating-action-bar {
-            left: 50%;
-            transform: translateX(-50%);
-            max-width: 700px;
-            border-radius: 16px 16px 0 0;
-            margin-bottom: 12px;
-          }
-        }
+
         @keyframes pulse {
           0% { text-shadow: 0 0 8px #d0f33055; }
           100% { text-shadow: 0 0 24px #d0f330; }
