@@ -56,7 +56,7 @@ const containerStyle = {
   WebkitBackdropFilter: 'blur(15px) saturate(1.2)',
   borderRadius: '16px',
   boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(208,243,48,0.2)', // Darker shadow + neon glow
-  marginTop: '-rem',
+  marginTop: '-rem', // This seems like a typo, should it be a value like '1rem'? Leaving as is to match original.
   marginBottom: '2rem',
   paddingTop: '2rem',
   paddingBottom: '2rem',
@@ -304,22 +304,17 @@ function ArticleDetails() {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 600);
-    };
-
+    const handleResize = () => setIsMobile(window.innerWidth <= 600);
     window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [articleRes, allRes] = await Promise.all([
-          fetch('https://openscroll-backend.onrender.com/api/articles/public/${id}'),
+          // CORRECTED: Using template literal for dynamic ID
+          fetch(`https://openscroll-backend.onrender.com/api/articles/public/${id}`),
           fetch('https://openscroll-backend.onrender.com/api/articles/public'),
         ]);
 
@@ -332,8 +327,10 @@ function ArticleDetails() {
 
         const user = JSON.parse(localStorage.getItem('openscroll_current_user'));
         const unlocked = JSON.parse(localStorage.getItem('openscroll_unlocked_articles')) || [];
+        
         // An article is unlocked if its price is 0, OR the current user is its author, OR it's in the unlocked list
-        const isAuthor = user && articleData.authorId === user.id;
+        // Using authorEmail for consistency as per File B's isAuthor check
+        const isAuthor = user && articleData.authorEmail === user.email;
         setIsUnlocked(Number(articleData.price) === 0 || unlocked.includes(id) || isAuthor);
 
       } catch (error) {
@@ -407,7 +404,8 @@ function ArticleDetails() {
             </div>
           )}
           <div style={metaContainerStyle}>
-            <p style={authorStyle}>By {article.authorFullName || article.authorEmail}</p>
+            {/* Enhanced author name fallback as per File B */}
+            <p style={authorStyle}>By {article.authorName || article.authorEmail || 'Unknown Author'}</p>
             <p style={categoryStyle}>{article.category}</p>
           </div>
           <div style={articleBodyStyle}>
@@ -425,6 +423,7 @@ function ArticleDetails() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.5 }}
                         >
+                          {/* Specific styles for locked message text as per File A */}
                           <p style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#d0f330' }}>This article is locked</p>
                           <p style={{ marginBottom: '0.5rem', color: '#ccc' }}>Price: ₹{article.price}</p>
                           <motion.button
@@ -436,7 +435,7 @@ function ArticleDetails() {
                             Unlock Now
                           </motion.button>
                         </motion.div>
-                        {/* Blurred content beneath overlay */}
+                        {/* Blurred content beneath overlay with more complete styling from File A */}
                         <div style={{ filter: 'blur(6px)', pointerEvents: 'none', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', color: '#e0e0e0' }}>
                           <p style={bodyStyle}>{remainingContent}</p>
                         </div>
@@ -483,8 +482,8 @@ function ArticleDetails() {
             style={{
               padding: '10px 24px',
               background: '#bde32c',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
+              backdropFilter: 'blur(12px)', // Re-added from File A
+              WebkitBackdropFilter: 'blur(12px)', // Re-added from File A
               color: '#111',
               border: '1px solid rgba(255, 255, 255, 0.3)',
               borderRadius: '12px',
@@ -496,7 +495,7 @@ function ArticleDetails() {
             }}
             whileHover={{
              background: '#fff',
-              transform: 'scale(1.03)',
+              //transform: 'scale(1.03)',
               boxShadow: '0 6px 20px rgba(0, 0, 0, 0.2), 0 0 10px #d0f33066',
             }}
             whileTap={{ scale: 0.98 }}
@@ -520,7 +519,8 @@ function ArticleDetails() {
                   <img src={art.coverImage} alt="thumb" style={thumbStyle} />
                   <p style={cardCategoryStyle}>{art.category}</p>
                   <h3 style={cardTitleStyle}>{art.title}</h3>
-                  <p style={cardAuthorStyle}>By {art.authorFullName ||art.authorEmail }</p>
+                  {/* Enhanced author name fallback as per File B */}
+                  <p style={cardAuthorStyle}>By {art.authorName || art.authorEmail || 'Unknown'}</p>
                 </Link>
               </motion.div>
             ))}

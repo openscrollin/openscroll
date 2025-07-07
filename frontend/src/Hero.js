@@ -15,6 +15,7 @@ function Hero() {
     padding: '0 2rem',
     color: '#fff',
     textAlign: 'center',
+    paddingTop: '8rem',
     position: 'relative',
     overflow: 'hidden',
   };

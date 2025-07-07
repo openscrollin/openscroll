@@ -1,39 +1,46 @@
-// firebase.js
+// src/firebase.js
 
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported as isAnalyticsSupported } from "firebase/analytics";
-import { getAuth, RecaptchaVerifier } from "firebase/auth"; // ✅ this was missing before
+import { getAuth, RecaptchaVerifier } from "firebase/auth";
+import { getStorage } from 'firebase/storage'; // ✅ make sure this is imported
 
-// Your web app's Firebase configuration
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBShlYC1nohKQwqBJAm5aBz5KXHcY3oMSU",
   authDomain: "openscroll-auth.firebaseapp.com",
   projectId: "openscroll-auth",
-  storageBucket: "openscroll-auth.firebasestorage.app",
+  storageBucket: "openscroll-auth.appspot.com", // ✅ Use `.appspot.com` not `.firebasestorage.app`
   messagingSenderId: "986464804310",
   appId: "1:986464804310:web:34a8ce506fc74ce821d877",
   measurementId: "G-0JZKZREZE3"
 };
 
-// Initialize Firebase
+// Initialize Firebase App
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app); // ✅ define auth properly here
 
-// Initialize Analytics only if supported
+// ✅ Initialize Firebase Auth
+const auth = getAuth(app);
+
+// ✅ Initialize Firebase Storage
+const storage = getStorage(app); // ✅ NOW it's defined
+
+// ✅ Conditionally initialize Analytics
 let analytics = null;
 isAnalyticsSupported().then((supported) => {
   if (supported) {
     analytics = getAnalytics(app);
-    console.log("Firebase Analytics is supported and initialized.");
+    console.log("Firebase Analytics initialized.");
   } else {
-    console.warn("Firebase Analytics is not supported in this environment.");
+    console.warn("Firebase Analytics not supported.");
   }
 });
 
-// ✅ Export required Firebase modules
+// ✅ Export everything needed
 export {
   app,
-  auth,              // ✅ now it exists
+  auth,
+  storage,             // ✅ now correctly exported
   analytics,
-  RecaptchaVerifier  // ✅ also needed for phone OTP
+  RecaptchaVerifier
 };

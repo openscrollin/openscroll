@@ -147,10 +147,10 @@ function RoleSelection() {
             Create, publish, and monetize your stories with AI-powered tools. Earn from premium content and build your audience.
           </div>
           <ul style={featureList}>
-            <li>• AI-enhanced writing editor</li>
-            <li>• Premium content monetization</li>
-            <li>• Analytics and earnings tracking</li>
-            <li>• Community engagement tools</li>
+            <li>AI-enhanced writing editor</li>
+            <li>Premium content monetization</li>
+            <li>Analytics and earnings tracking</li>
+            <li>Community engagement tools</li>
           </ul>
           <div style={btnRow}>
             <Link to="/writer/login" style={btn}>Login</Link>
@@ -171,10 +171,10 @@ function RoleSelection() {
             Discover amazing stories, support your favorite writers, and access exclusive premium content tailored to your interests.
           </div>
           <ul style={featureList}>
-            <li>• Personalized recommendations</li>
-            <li>• Reading history and bookmarks</li>
-            <li>• Premium content access</li>
-            <li>• Community discussions</li>
+            <li>Personalized recommendations</li>
+            <li>Reading history and bookmarks</li>
+            <li>Premium content access</li>
+            <li>Community discussions</li>
           </ul>
           <div style={btnRow}>
             <Link to="/login" style={btn}>Login</Link>

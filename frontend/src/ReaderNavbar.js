@@ -35,7 +35,9 @@ function ReaderNavbar() {
     background: '#07080a',
     borderBottom: '0.01px solid #d0f330',
     boxShadow: '0 2px 24px 0 #d0f33022',
-    position: 'sticky',
+    position: 'fixed',
+    width: '100%',
+    left: 0,
     top: 0,
     zIndex: 1001,
     minHeight: '64px',
@@ -77,7 +79,7 @@ function ReaderNavbar() {
     fontWeight: 800,
     fontSize: '1.25rem',
     color: '#d0f330',
-    letterSpacing: '-1px',
+    letterSpacing: '1px',
     fontFamily: "'Nunito Sans', Nunito sans, Sans Serif",
   };
 
@@ -86,7 +88,7 @@ function ReaderNavbar() {
     fontSize: '0.7rem',
     color: '#b6c2b6',
     letterSpacing: '2px',
-    marginTop: '-2px',
+    marginTop: '4px',
     fontFamily: "'Nunito Sans', Nunito sans, Sans Serif",
   };
 

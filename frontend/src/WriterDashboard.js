@@ -65,7 +65,7 @@ function WriterDashboard() {
   ];
 
   return (
-    <div style={{ padding: '2rem', minHeight: '100vh', background: '#07080a', fontFamily: "'Nunito Sans', sans-serif" }}>
+    <div style={{ padding: '5rem 2rem 2rem 2rem', minHeight: '100vh', background: '#07080a', fontFamily: "'Nunito Sans', sans-serif" }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '2.2rem', fontWeight: 700, color: '#fff',marginBottom: '0.5rem' }}>
@@ -76,7 +76,7 @@ function WriterDashboard() {
           </p>
         </div>
         <Link to="/writer/new-article" style={{ textDecoration: 'none' }}>
-          <button style={{
+          <button className="new-article-btn" style={{
             background: 'linear-gradient(90deg, #d0f330 60%, #b0e000 100%)',
             color: '#111',
             fontWeight: 700,
@@ -91,7 +91,7 @@ function WriterDashboard() {
             cursor: 'pointer',
             transition: 'background 0.18s, color 0.18s'
           }}>
-            <span style={{ fontSize: '1.3rem' }}>➕</span> New Article <span style={{ fontSize: '1.1rem' }}>⚡</span>
+            <span style={{ fontSize: '1.3rem' }}>➕</span> New Article <span style={{ fontSize: '1.1rem' }}></span>
           </button>
         </Link>
       </div>
@@ -218,6 +218,14 @@ function WriterDashboard() {
             grid-template-columns: 1fr !important;
           }
         }
+        @media (max-width: 600px) {
+          .new-article-btn {
+            font-size: 0.95rem !important;
+            padding: 0.6rem 1rem !important;
+            border-radius: 8px !important;
+            gap: 0.4rem !important;
+          }
+      } 
       `}</style>
     </div>
   );

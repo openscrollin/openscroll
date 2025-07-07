@@ -18,11 +18,14 @@ function Navbar() {
     background: '#07080a',
     borderBottom: '0.01px solid #d0f330',
     boxShadow: '0 2px 24px 0 #d0f33022',
-    position: 'sticky',
+    position: 'fixed',
+    width: '100%',
+    left: 0,
     top: 0,
-    zIndex: 1001, // <-- increase this value above the moving grid's z-index
+    zIndex: 100, // <-- increase this value above the moving grid's z-index
     minHeight: '64px',
     justifyContent: 'space-between',
+    fontFamily: "'Nunito Sans', sans-serif",
   };
 
   const logoRow = {
@@ -158,14 +161,14 @@ function Navbar() {
   const mobileMenu = {
     display: menuOpen ? 'flex' : 'none',
     flexDirection: 'column',
-    position: 'absolute',
+    position: 'fixed',
     top: '100%',
     right: 0,
     left: 0,
     background: 'rgba(7,8,10,0.97)',
     boxShadow: '0 8px 32px #000a',
     padding: '1.5rem 1.2rem 1.2rem 1.2rem',
-    zIndex: 999,
+    zIndex: 100,
     borderBottomLeftRadius: '0.8rem',
     borderBottomRightRadius: '0.8rem',
     animation: menuOpen ? 'fadeInDown 0.25s' : 'none',

@@ -2,6 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
+//import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from './firebase'; // adjust path based on your project structure
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
 
 function AddArticle() {
   const navigate = useNavigate();
@@ -19,6 +23,8 @@ function AddArticle() {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+
 
   // Example categories (customize as needed)
   const categories = [
@@ -35,14 +41,30 @@ function AddArticle() {
     'Other'
   ];
 
-  // File/image upload
-  const handleImageUpload = (e) => {
+
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setCoverImage(reader.result);
-    reader.readAsDataURL(file);
+
+    // Assuming setUploadingImage is a state setter function (e.g., from useState)
+    // that controls a loading indicator in your UI.
+    setUploadingImage(true);
+    try {
+      const storageRef = ref(storage, `coverImages/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+     console.log("Uploaded URL:", downloadURL); // For debugging/confirmation
+     setCoverImage(downloadURL); // This will update your state and can be sent to MongoDB
+    } catch (err) {
+      console.error("Image upload failed:", err); // Log the actual error for debugging
+      // Assuming setError is a state setter function for displaying errors to the user.
+     setError("Failed to upload image. Please try again.");
+    } finally {
+      // This ensures setUploadingImage(false) is called regardless of success or failure.
+     setUploadingImage(false);
+    }
   };
+
 
   // Save as draft
   const saveAsDraft = async () => {
@@ -72,13 +94,14 @@ function AddArticle() {
       setError('Please select a category.');
       return;
     }
+
     const writerData = JSON.parse(localStorage.getItem('openscroll_current_user'));
     const token = localStorage.getItem('writerToken');
-    console.log('Token being sent:', token);
     if (!writerData || !token) {
       setError('User not authenticated.');
       return;
     }
+
     const articleData = {
       title: title.trim(),
       body,
@@ -88,19 +111,21 @@ function AddArticle() {
       price: isPremium ? price : '0',
       isPremium,
       isPublished: publish,
-      authorName: writerData.name || writerData.fullName,
+      authorName: writerData.name || writerData.fullName || 'Unknown Author',
       authorEmail: writerData.email,
       createdAt: new Date().toISOString(),
     };
+
     try {
       const response = await fetch('https://openscroll-backend.onrender.com/api/addArticle', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(articleData),
       });
+
       const result = await response.json();
       if (response.ok) {
         setSuccessMessage(publish ? 'Article published successfully! Redirecting...' : 'Draft saved!');
@@ -569,10 +594,10 @@ function AddArticle() {
 
       {/* Floating Action Bar for Save/Publish */}
       <div className="floating-action-bar">
-        <button style={ghostBtn} onClick={saveAsDraft} disabled={saving}>
+        <button style={ghostBtn} onClick={saveAsDraft} disabled={saving || uploadingImage}>
           Save Draft
         </button>
-        <button style={button} onClick={publishArticle} disabled={publishing}>
+        <button style={button} onClick={publishArticle} disabled={publishing || uploadingImage}>
           Publish
         </button>
       </div>
