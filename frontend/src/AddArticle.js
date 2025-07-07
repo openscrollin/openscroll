@@ -1,33 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
+import { auth,storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-// Assuming 'storage' is imported from your firebase config file
-// import { storage } from './firebase'; // adjust path based on your project structure
-
-// Placeholder for firebase storage, as the original import was commented out.
-// In a real application, ensure 'storage' is properly initialized and exported from your firebase config.
-const storage = {
-  // Mock ref, uploadBytes, getDownloadURL for demonstration if firebase is not fully set up.
-  // In a real app, these would be the actual firebase functions.
-  ref: (storageInstance, path) => ({ path }),
-  uploadBytes: async (ref, file) => {
-    console.log(`Mock: Uploading ${file.name} to ${ref.path}`);
-    return new Promise(resolve => setTimeout(() => resolve({ ref }), 1000));
-  },
-  getDownloadURL: async (ref) => {
-    console.log(`Mock: Getting download URL for ${ref.path}`);
-    return new Promise(resolve => setTimeout(() => resolve(`https://mockurl.com/${ref.path.split('/').pop()}`), 1500));
-  }
-};
-
+//import { getAuth } from 'firebase/auth';
 
 function AddArticle() {
   const navigate = useNavigate();
   const quillRef = useRef(null);
 
-  // State
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [excerpt, setExcerpt] = useState('');
@@ -41,68 +23,38 @@ function AddArticle() {
   const [successMessage, setSuccessMessage] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
 
-
-  // Example categories (customize as needed)
   const categories = [
-    '',
-    'Technology',
-    'Science',
-    'Fiction',
-    'Non-fiction',
-    'AI',
-    'Cyberpunk',
-    'Culture',
-    'Tutorial',
-    'Opinion',
-    'Other'
+    '', 'Technology', 'Science', 'Fiction', 'Non-fiction', 'AI', 'Cyberpunk',
+    'Culture', 'Tutorial', 'Opinion', 'Other',
   ];
-
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Assuming setUploadingImage is a state setter function (e.g., from useState)
-    // that controls a loading indicator in your UI.
+    //const auth = getAuth();
+    const user = auth.currentUser;
+    console.log("🧪 Firebase User during upload:", user);
+    if (!user) {
+      setError('You must be logged in to upload an image.');
+      return;
+    }
+
     setUploadingImage(true);
+    setError('');
     try {
-      // Ensure 'storage' is correctly imported and initialized from your Firebase config.
-      // The original code had 'storage' commented out, so a mock is used here for demonstration.
       const storageRef = ref(storage, `coverImages/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-     console.log("Uploaded URL:", downloadURL); // For debugging/confirmation
-     setCoverImage(downloadURL); // This will update your state and can be sent to MongoDB
+      const snapshot = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      setCoverImage(downloadURL);
     } catch (err) {
-      console.error("Image upload failed:", err); // Log the actual error for debugging
-      // Assuming setError is a state setter function for displaying errors to the user.
-     setError("Failed to upload image. Please try again.");
+      console.error('Image upload failed:', err);
+      setError('Failed to upload image. Please try again.');
     } finally {
-      // This ensures setUploadingImage(false) is called regardless of success or failure.
-     setUploadingImage(false);
+      setUploadingImage(false);
     }
   };
 
-
-  // Save as draft
-  const saveAsDraft = async () => {
-    setSaving(true);
-    setError('');
-    setSuccessMessage('');
-    await handleSubmit(false);
-    setSaving(false);
-  };
-
-  // Publish
-  const publishArticle = async () => {
-    setPublishing(true);
-    setError('');
-    setSuccessMessage('');
-    await handleSubmit(true);
-    setPublishing(false);
-  };
-
-  // Main submit logic
   const handleSubmit = async (publish) => {
     if (!title.trim() || !body.trim()) {
       setError('Title and content are required.');
@@ -115,12 +67,13 @@ function AddArticle() {
 
     const writerData = JSON.parse(localStorage.getItem('openscroll_current_user'));
     const token = localStorage.getItem('writerToken');
+
     if (!writerData || !token) {
       setError('User not authenticated.');
       return;
     }
 
-    /*const articleData = {
+    const articleData = {
       title: title.trim(),
       body,
       excerpt: excerpt || body.replace(/<[^>]+>/g, '').substring(0, 200) + '...',
@@ -132,26 +85,19 @@ function AddArticle() {
       authorName: writerData.name || writerData.fullName || 'Unknown Author',
       authorEmail: writerData.email,
       createdAt: new Date().toISOString(),
-    };*/
+    };
 
     try {
-      // Mock API call for demonstration. Replace with your actual fetch call.
-      // const response = await fetch('https://openscroll-backend.onrender.com/api/addArticle', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`,
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(articleData),
-      // });
-      // const result = await response.json();
+      const response = await fetch('https://openscroll-backend.onrender.com/api/addArticle', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(articleData),
+      });
 
-      // Mocking a successful response for now
-      const mockResponse = { ok: true, json: () => Promise.resolve({ message: 'Article saved/published successfully!' }) };
-      const response = mockResponse;
       const result = await response.json();
-
-
       if (response.ok) {
         setSuccessMessage(publish ? 'Article published successfully! Redirecting...' : 'Draft saved!');
         setTimeout(() => navigate('/writer/dashboard'), 1800);
@@ -163,79 +109,89 @@ function AddArticle() {
     }
   };
 
-  useEffect(() => {
-    // Remove AI suggestion trigger
-    // if (body.length > 100) {
-    //   generateAISuggestions(body);
-    // }
-  }, [body]);
+  const saveAsDraft = async () => {
+    setSaving(true);
+    setError('');
+    setSuccessMessage('');
+    await handleSubmit(false);
+    setSaving(false);
+  };
 
-  // --- Styles ---
-  const glass = {
-    background: 'rgba(24,26,19,0.85)',
-    borderRadius: 16,
-    boxShadow: '0 4px 32px #d0f33011',
-    border: '1.5px solid #d0f33022',
-    padding: 24,
-    marginBottom: 0,
+  const publishArticle = async () => {
+    setPublishing(true);
+    setError('');
+    setSuccessMessage('');
+    await handleSubmit(true);
+    setPublishing(false);
   };
-  const neon = { boxShadow: '0 0 24px #d0f33055' };
-  const input = {
-    width: '100%',
-    padding: '0.9rem 1rem',
-    fontSize: '1rem',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    backgroundColor: '#181a13',
-    color: '#fff',
-    marginBottom: '0.75rem',
-    outline: 'none'
-  };
-  const label = {
-    display: 'block',
-    fontWeight: '600',
-    fontSize: '0.95rem',
-    color: '#b6c2b6',
-    marginBottom: '0.4rem',
-    marginTop: '1rem',
-  };
-  const button = {
-    marginTop: 0,
-    padding: '0.8rem 1.5rem',
-    background: 'linear-gradient(90deg, #d0f330 60%, #b0e000 100%)',
-    color: '#111',
-    fontWeight: 700,
-    fontSize: '1rem',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    marginLeft: 8,
-    marginRight: 0,
-    boxShadow: '0 0 16px #d0f33044',
-    transition: 'background 0.18s, color 0.18s'
-  };
-  const ghostBtn = {
-    ...button,
-    background: 'none',
-    color: '#d0f330',
-    boxShadow: 'none',
-    border: '1.5px solid #d0f33044',
-    marginLeft: 0,
-    marginRight: 8,
+
+  const styles = {
+    container: {
+      maxWidth: 1200,
+      margin: '0 auto',
+      padding: '4rem 1rem 2rem', // Adjusted padding to match first code
+      minHeight: '100vh',
+      background: '#07080a',
+      fontFamily: "'Nunito Sans', sans-serif",
+      position: 'relative', // Added for potential future positioning
+    },
+    glass: {
+      background: 'rgba(24,26,19,0.85)',
+      borderRadius: 16,
+      boxShadow: '0 4px 32px #d0f33011',
+      border: '1.5px solid #d0f33022',
+      padding: 24,
+      marginBottom: 0, // Added to ensure consistent spacing
+    },
+    neon: {
+      boxShadow: '0 0 24px #d0f33055',
+    },
+    input: {
+      width: '100%',
+      padding: '0.9rem 1rem',
+      fontSize: '1rem',
+      borderRadius: '12px',
+      border: '1px solid #e5e7eb',
+      backgroundColor: '#181a13',
+      color: '#fff',
+      marginBottom: '0.75rem',
+      outline: 'none',
+    },
+    label: {
+      display: 'block',
+      fontWeight: '600',
+      fontSize: '0.95rem',
+      color: '#b6c2b6',
+      marginBottom: '0.4rem',
+      marginTop: '1rem',
+    },
+    button: {
+      marginTop: 0,
+      padding: '0.8rem 1.5rem',
+      background: 'linear-gradient(90deg, #d0f330 60%, #b0e000 100%)',
+      color: '#111',
+      fontWeight: 700,
+      fontSize: '1rem',
+      border: 'none',
+      borderRadius: '12px',
+      cursor: 'pointer',
+      marginLeft: 8,
+      marginRight: 0,
+      boxShadow: '0 0 16px #d0f33044',
+      transition: 'background 0.18s, color 0.18s',
+    },
+    ghostBtn: {
+      background: 'none',
+      color: '#d0f330',
+      boxShadow: 'none',
+      border: '1.5px solid #d0f33044',
+      marginLeft: 0,
+      marginRight: 8,
+    },
   };
 
   return (
-    <div
-      style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '4rem 1rem 2rem',
-        minHeight: '100vh',
-        background: '#07080a',
-        fontFamily: "'Nunito Sans', sans-serif",
-        position: 'relative',
-      }}
-    >
+    <div style={styles.container}>
       {/* Header */}
       <div
         style={{
@@ -248,44 +204,9 @@ function AddArticle() {
         }}
       >
         <div>
-          <h1
-            style={{
-              fontSize: '2.2rem',
-              fontWeight: 700,
-              color: '#fff',
-              marginBottom: 6,
-            }}
-          >
-            Editor
-          </h1>
-          <p
-            style={{
-              color: '#d0f330',
-              opacity: 0.7,
-              fontFamily: 'monospace',
-              fontWeight: 600,
-              letterSpacing: 2,
-            }}
-          >
-            NEURAL.WRITING.ASSISTANT
-          </p>
+          <h1 style={{ color: '#fff', fontSize: '2.2rem', fontWeight: 700, marginBottom: 6 }}>Editor</h1>
+          <p style={{ color: '#d0f330', opacity: 0.7, fontFamily: 'monospace', fontWeight: 600 }}>NEURAL.WRITING.ASSISTANT</p>
         </div>
-        {/* REMOVE BUTTONS FROM HEADER */}
-        {/* <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <button style={ghostBtn} onClick={saveAsDraft} disabled={saving}>
-            Save Draft
-          </button>
-          <button style={button} onClick={publishArticle} disabled={publishing}>
-            Publish
-          </button>
-        </div> */}
       </div>
 
       <div
@@ -299,35 +220,17 @@ function AddArticle() {
         {/* Main Editor */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Title */}
-          <div style={{ ...glass, ...neon }}>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                marginBottom: 12,
-                flexDirection: 'row',
-              }}
-            >
-              <input
-                type="text"
-                placeholder="Enter your article title..."
-                value={title}
-                onChange={e => setTitle(e.target.value)}
-                style={{
-                  ...input,
-                  fontSize: 22,
-                  fontWeight: 600,
-                  marginBottom: 0,
-                  flex: 1,
-                  minWidth: 0,
-                }}
-              />
-              {/* Removed the AI Enhance button */}
-            </div>
+          <div style={{ ...styles.glass, ...styles.neon }}>
+            <input
+              type="text"
+              placeholder="Enter your article title..."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              style={{ ...styles.input, fontSize: 22, fontWeight: 600, marginBottom: 0 }}
+            />
           </div>
           {/* Content */}
-          <div style={{ ...glass, ...neon }}>
+          <div style={{ ...styles.glass, ...styles.neon }}>
             <div
               style={{
                 display: 'flex',
@@ -338,40 +241,16 @@ function AddArticle() {
                 gap: 8,
               }}
             >
-              <span style={{ color: '#fff', fontWeight: 600, fontSize: 17 }}>
-                Content
-              </span>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  flexWrap: 'wrap',
-                }}
-              >
-                {/*
-                <button style={ghostBtn} onClick={() => setShowAiPanel(!showAiPanel)}>
-                  AI Assistant
-                </button>
-                */}
-                <span
-                  style={{
-                    color: '#b6c2b6',
-                    fontFamily: 'monospace',
-                    fontSize: 13,
-                  }}
-                >
-                  {body.length} chars
-                </span>
-              </div>
+              <span style={{ color: '#fff', fontWeight: 600, fontSize: 17 }}>Content</span>
+              <span style={{ color: '#b6c2b6', fontFamily: 'monospace', fontSize: 13 }}>{body.length} chars</span>
             </div>
-            <div style={{ marginBottom: 50 }}>
+            <div style={{ marginBottom: 50 }}> {/* Added margin-bottom to quill container */}
               <ReactQuill
+                ref={quillRef}
                 value={body}
                 onChange={setBody}
-                ref={quillRef}
                 style={{
-                  height: 304,
+                  height: 260, // Kept this at 260 as per your second code
                   background: '#181a13',
                   color: '#fff',
                   borderRadius: 12,
@@ -379,88 +258,11 @@ function AddArticle() {
               />
             </div>
           </div>
-          {/* AI Suggestions */}
-          {/*
-          {aiSuggestions.length > 0 && (
-            <div style={{ ...glass, ...neon }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginBottom: 12,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 20,
-                    color: '#d0f330',
-                    animation: 'pulse 1s infinite alternate',
-                  }}
-                >
-                  ⚡
-                </span>
-                <span
-                  style={{
-                    color: '#fff',
-                    fontWeight: 600,
-                    fontSize: 17,
-                  }}
-                >
-                  AI Suggestions
-                </span>
-              </div>
-              <div>
-                {aiSuggestions.map((s, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: '#181a13',
-                      border: '1px solid #d0f33022',
-                      borderRadius: 10,
-                      padding: '0.7rem 1rem',
-                      marginBottom: 10,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color:
-                          s.type === 'grammar'
-                            ? '#f87171'
-                            : s.type === 'style'
-                            ? '#38bdf8'
-                            : '#a78bfa',
-                        background:
-                          s.type === 'grammar'
-                            ? '#f8717122'
-                            : s.type === 'style'
-                            ? '#38bdf822'
-                            : '#a78bfa22',
-                        borderRadius: 8,
-                        padding: '2px 8px',
-                        marginRight: 8,
-                      }}
-                    >
-                      {s.type.toUpperCase()}
-                    </span>
-                    <span style={{ color: '#b6c2b6', fontSize: 14 }}>
-                      Replace "
-                      <span style={{ color: '#f87171' }}>{s.text}</span>" with "
-                      <span style={{ color: '#d0f330' }}>{s.suggestion}</span>"
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          */}
         </div>
         {/* Sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           {/* Article Settings */}
-          <div style={{ ...glass, ...neon }}>
+          <div style={{ ...styles.glass, ...styles.neon }}>
             <span
               style={{
                 color: '#fff',
@@ -474,24 +276,21 @@ function AddArticle() {
             </span>
             {/* Excerpt */}
             <div style={{ marginBottom: 16 }}>
-              <label style={label}>Summary</label>
+              <label style={styles.label}>Summary</label>
               <textarea
                 value={excerpt}
-                onChange={e => setExcerpt(e.target.value)}
+                onChange={(e) => setExcerpt(e.target.value)}
                 placeholder="Brief description of your article..."
-                style={{ ...input, height: 80, resize: 'none' }}
+                style={{ ...styles.input, height: 80, resize: 'none' }}
               />
-              {/* <button style={ghostBtn} onClick={generateExcerpt}>
-                Auto-generate
-              </button> */}
             </div>
             {/* Cover Image */}
             <div style={{ marginBottom: 16 }}>
-              <label style={label}>Cover Image</label>
+              <label style={styles.label}>Cover Image</label>
               <input
                 type="file"
                 accept="image/*"
-                style={input}
+                style={styles.input}
                 onChange={handleImageUpload}
               />
               {coverImage && (
@@ -510,11 +309,11 @@ function AddArticle() {
             </div>
             {/* Category Dropdown */}
             <div style={{ marginBottom: 16 }}>
-              <label style={label}>Category</label>
+              <label style={styles.label}>Category</label>
               <select
                 value={category}
-                onChange={e => setCategory(e.target.value)}
-                style={{ ...input, marginBottom: 0 }}
+                onChange={(e) => setCategory(e.target.value)}
+                style={{ ...styles.input, marginBottom: 0 }}
               >
                 {categories.map((cat, idx) => (
                   <option key={idx} value={cat}>
@@ -577,16 +376,15 @@ function AddArticle() {
               </div>
               {isPremium && (
                 <div>
-                  <label style={label}>Price (INR)</label>
+                  <label style={styles.label}>Price (INR)</label>
                   <input
                     type="number"
                     placeholder="0"
                     value={price}
-                    onChange={e => setPrice(e.target.value)}
-                    style={{ ...input, paddingLeft: 32 }}
+                    onChange={(e) => setPrice(e.target.value)}
+                    style={{ ...styles.input, paddingLeft: 32 }}
                     min="0"
                   />
-                  
                   <span
                     style={{
                       position: 'absolute',
@@ -609,14 +407,14 @@ function AddArticle() {
               display: 'flex',
               flexWrap: 'wrap',
               gap: '12px',
-              marginTop: '8px', // Changed from 24px to 8px
+              marginTop: '8px',
               justifyContent: 'space-between',
             }}
           >
-            <button style={ghostBtn} onClick={saveAsDraft} disabled={saving || uploadingImage}>
+            <button style={{...styles.ghostBtn, ...styles.button}} onClick={saveAsDraft} disabled={saving || uploadingImage}>
               Save Draft
             </button>
-            <button style={button} onClick={publishArticle} disabled={publishing || uploadingImage}>
+            <button style={styles.button} onClick={publishArticle} disabled={publishing || uploadingImage}>
               Publish
             </button>
           </div>
@@ -637,7 +435,7 @@ function AddArticle() {
         </div>
       )}
 
-
+      {/* Media queries for responsiveness */}
       <style>{`
         @media (max-width: 900px) {
           .add-article-grid {

@@ -4,14 +4,13 @@ function CarouselManager() {
   const [images, setImages] = useState([]);
   const [newImage, setNewImage] = useState(null);
   const [message, setMessage] = useState('');
-  const [messageType, setMessageType] = useState('success'); // for coloring
+  const [messageType, setMessageType] = useState('success');
   const fileInputRef = useRef();
 
   const fetchImages = () => {
-    fetch('http://localhost:5002/api/admin/carousel-images', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('openscroll_admin_token')}`,
-      },
+    fetch('https://openscroll-backend.onrender.com/api/admin/carousel-images', {
+      method: 'GET',
+      credentials: 'include',
     })
       .then((res) => res.json())
       .then((data) => setImages(data.images || []))
@@ -26,7 +25,6 @@ function CarouselManager() {
     fetchImages();
   }, []);
 
-  // Remove message after 2.5 seconds
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => setMessage(''), 2500);
@@ -41,11 +39,9 @@ function CarouselManager() {
     formData.append('image', newImage);
 
     try {
-      const res = await fetch('http://localhost:5002/api/admin/carousel-images', {
+      const res = await fetch('https://openscroll-backend.onrender.com/api/admin/carousel-images', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('openscroll_admin_token')}`,
-        },
+        credentials: 'include',
         body: formData,
       });
 
@@ -54,7 +50,6 @@ function CarouselManager() {
         setMessage('✅ Image uploaded successfully!');
         setMessageType('success');
         setNewImage(null);
-        // Reset file input value
         if (fileInputRef.current) fileInputRef.current.value = '';
         fetchImages();
       } else {
@@ -73,11 +68,9 @@ function CarouselManager() {
     if (!confirmDelete) return;
 
     try {
-      await fetch(`http://localhost:5002/api/admin/carousel-images/${id}`, {
+      await fetch(`https://openscroll-backend.onrender.com/api/admin/carousel-images/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('openscroll_admin_token')}`,
-        },
+        credentials: 'include',
       });
       fetchImages();
     } catch (err) {
@@ -114,6 +107,7 @@ function CarouselManager() {
       >
         Upload Image
       </button>
+
       {message && (
         <p
           style={{
@@ -144,7 +138,7 @@ function CarouselManager() {
                   objectFit: 'cover',
                   borderRadius: '8px',
                   marginBottom: '0.5rem',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                 }}
               />
               <button
@@ -158,7 +152,7 @@ function CarouselManager() {
                   fontWeight: 600,
                   fontSize: '0.95rem',
                   cursor: 'pointer',
-                  marginTop: '0.25rem'
+                  marginTop: '0.25rem',
                 }}
               >
                 Delete
