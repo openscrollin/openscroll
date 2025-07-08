@@ -1,43 +1,51 @@
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
-const adminAuth = require('../middleware/authenticateAdmin'); // Or your admin middleware!
-const bucket = require('../config/firebase');
-const HeroImage = require('../models/HeroImage'); // Create a simple Mongoose model
+const adminAuth = require('../middleware/authenticateAdmin');
+const HeroImage = require('../models/HeroImage');
 
-const upload = multer({ storage: multer.memoryStorage() });
-
-// POST: upload hero image
-router.post('/', adminAuth, upload.single('image'), async (req, res) => {
+// POST: Save hero image URL to database (image uploaded via Firebase on frontend)
+router.post('/', adminAuth, async (req, res) => {
   try {
-    const filename = `hero/${uuidv4()}_${req.file.originalname}`;
-    const file = bucket.file(filename);
+    const { url } = req.body;
+    
+    if (!url) {
+      return res.status(400).json({ error: 'Image URL is required' });
+    }
 
-    const stream = file.createWriteStream({
-      metadata: { contentType: req.file.mimetype }
-    });
-
-    stream.on('error', (err) => res.status(500).json({ error: 'Upload failed' }));
-
-    stream.on('finish', async () => {
-      await file.makePublic();
-      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
-      // Save/update in DB (always one hero image)
-      await HeroImage.findOneAndUpdate({}, { url: publicUrl }, { upsert: true, new: true });
-      res.json({ success: true, url: publicUrl });
-    });
-
-    stream.end(req.file.buffer);
+    // Save/update in DB (always one hero image)
+    const heroImage = await HeroImage.findOneAndUpdate(
+      {}, 
+      { url }, 
+      { upsert: true, new: true }
+    );
+    
+    res.json({ success: true, url: heroImage.url });
   } catch (err) {
-    res.status(500).json({ error: 'Upload failed' });
+    console.error('Save error:', err);
+    res.status(500).json({ error: 'Failed to save hero image' });
   }
 });
 
 // GET: fetch current hero image
 router.get('/', async (req, res) => {
-  const heroImage = await HeroImage.findOne({});
-  res.json({ url: heroImage?.url || null });
+  try {
+    const heroImage = await HeroImage.findOne({});
+    res.json({ url: heroImage?.url || null });
+  } catch (err) {
+    console.error('Fetch error:', err);
+    res.status(500).json({ error: 'Failed to fetch hero image' });
+  }
+});
+
+// DELETE: remove hero image
+router.delete('/', adminAuth, async (req, res) => {
+  try {
+    await HeroImage.deleteMany({});
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete error:', err);
+    res.status(500).json({ error: 'Failed to delete hero image' });
+  }
 });
 
 module.exports = router;

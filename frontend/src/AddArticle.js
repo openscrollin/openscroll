@@ -43,7 +43,9 @@ function AddArticle() {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (!firebaseUser) {
+    // Check if user is authenticated
+    const writerData = JSON.parse(localStorage.getItem('openscroll_current_user'));
+    if (!writerData) {
       setError('You must be logged in to upload an image.');
       return;
     }
@@ -52,13 +54,27 @@ function AddArticle() {
     setError('');
 
     try {
-      const storageRef = ref(storage, `coverImages/${Date.now()}_${file.name}`);
+      // Create a unique filename
+      const timestamp = Date.now();
+      const fileName = `${timestamp}_${file.name}`;
+      const storageRef = ref(storage, `coverImages/${fileName}`);
+      
+      console.log('📤 Uploading image to Firebase Storage...');
+      
+      // Upload the file
       const snapshot = await uploadBytes(storageRef, file);
+      console.log('✅ Image uploaded successfully:', snapshot);
+      
+      // Get the download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('✅ Download URL obtained:', downloadURL);
+      
       setCoverImage(downloadURL);
+      setSuccessMessage('Image uploaded successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('❌ Image upload failed:', err);
-      setError('Failed to upload image. Please try again.');
+      setError(`Failed to upload image: ${err.message}`);
     } finally {
       setUploadingImage(false);
     }
@@ -199,8 +215,6 @@ function AddArticle() {
     },
   };
 
-
-
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -255,13 +269,13 @@ function AddArticle() {
               <span style={{ color: '#fff', fontWeight: 600, fontSize: 17 }}>Content</span>
               <span style={{ color: '#b6c2b6', fontFamily: 'monospace', fontSize: 13 }}>{body.length} chars</span>
             </div>
-            <div style={{ marginBottom: 50 }}> {/* Added margin-bottom to quill container */}
+            <div style={{ marginBottom: 50 }}>
               <ReactQuill
                 ref={quillRef}
                 value={body}
                 onChange={setBody}
                 style={{
-                  height: 260, // Kept this at 260 as per your second code
+                  height: 260,
                   background: '#181a13',
                   color: '#fff',
                   borderRadius: 12,
@@ -303,19 +317,29 @@ function AddArticle() {
                 accept="image/*"
                 style={styles.input}
                 onChange={handleImageUpload}
+                disabled={uploadingImage}
               />
+              {uploadingImage && (
+                <div style={{ color: '#d0f330', fontSize: '0.9rem', marginTop: 8 }}>
+                  Uploading image...
+                </div>
+              )}
               {coverImage && (
-                <img
-                  src={coverImage}
-                  alt="cover"
-                  style={{
-                    width: '100%',
-                    borderRadius: 10,
-                    marginTop: 8,
-                    maxHeight: 120,
-                    objectFit: 'cover',
-                  }}
-                />
+                <div style={{ marginTop: 8 }}>
+                  <img
+                    src={coverImage}
+                    alt="cover"
+                    style={{
+                      width: '100%',
+                      borderRadius: 10,
+                      maxHeight: 120,
+                      objectFit: 'cover',
+                    }}
+                  />
+                  <div style={{ color: '#4ade80', fontSize: '0.8rem', marginTop: 4 }}>
+                    ✅ Image uploaded successfully
+                  </div>
+                </div>
               )}
             </div>
             {/* Category Dropdown */}
@@ -409,9 +433,9 @@ function AddArticle() {
                 </div>
               )}
             </div>
-          </div> {/* End of Article Settings box */}
+          </div>
 
-          {/* Action Buttons below Article Settings box */}
+          {/* Action Buttons */}
           <div
             className="bottom-action-buttons"
             style={{
@@ -422,24 +446,37 @@ function AddArticle() {
               justifyContent: 'space-between',
             }}
           >
-            <button style={{...styles.ghostBtn, ...styles.button}} onClick={saveAsDraft} disabled={saving || uploadingImage}>
-              Save Draft
+            <button 
+              style={{...styles.ghostBtn, ...styles.button}} 
+              onClick={saveAsDraft} 
+              disabled={saving || uploadingImage}
+            >
+              {saving ? 'Saving...' : 'Save Draft'}
             </button>
-            <button style={styles.button} onClick={publishArticle} disabled={publishing || uploadingImage}>
-              Publish
+            <button 
+              style={styles.button} 
+              onClick={publishArticle} 
+              disabled={publishing || uploadingImage}
+            >
+              {publishing ? 'Publishing...' : 'Publish'}
             </button>
           </div>
-        </div> {/* End of Sidebar */}
+        </div>
       </div>
-      {/* Error/Success */}
+
+      {/* Error/Success Messages */}
       {(error || successMessage) && (
         <div
           style={{
             marginTop: 24,
             textAlign: 'center',
-            color: error ? 'red' : 'green',
+            color: error ? '#ff4d4f' : '#4ade80',
             fontWeight: 600,
             fontSize: 16,
+            padding: '12px',
+            borderRadius: '8px',
+            background: error ? 'rgba(255, 77, 79, 0.1)' : 'rgba(74, 222, 128, 0.1)',
+            border: `1px solid ${error ? '#ff4d4f' : '#4ade80'}`,
           }}
         >
           {error || successMessage}
