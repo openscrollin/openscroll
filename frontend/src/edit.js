@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
 //import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from './firebase'; // adjust path based on your project structure
+import { storage, auth } from './firebase'; // adjust path based on your project structure
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 function AddArticle() {
@@ -57,17 +57,20 @@ const file = e.target.files[0];
 
 if (!file) return;
 
-
-
-// Assuming setUploadingImage is a state setter function (e.g., from useState)
-
-// that controls a loading indicator in your UI.
+// Check if user is authenticated to Firebase
+const user = auth.currentUser;
+console.log("🔥 Firebase User during upload:", user);
+if (!user) {
+  setError('Please ensure you are logged in to upload images.');
+  return;
+}
 
 setUploadingImage(true);
+setError(''); // Clear any previous errors
 
 try {
 
-const storageRef = ref(storage, coverImages/${Date.now()}_${file.name});
+const storageRef = ref(storage, `coverImages/${Date.now()}_${file.name}`);
 
 await uploadBytes(storageRef, file);
 
@@ -80,10 +83,15 @@ setCoverImage(downloadURL); // This will update your state and can be sent to Mo
 } catch (err) {
 
 console.error("Image upload failed:", err); // Log the actual error for debugging
+console.error("Error details:", {
+  code: err.code,
+  message: err.message,
+  stack: err.stack
+});
 
 // Assuming setError is a state setter function for displaying errors to the user.
 
-setError("Failed to upload image. Please try again.");
+setError(`Failed to upload image: ${err.message || 'Please try again.'}`);
 
 } finally {
 
