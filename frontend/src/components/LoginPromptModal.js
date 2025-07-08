@@ -201,7 +201,7 @@ function LoginPromoModal({ onClose, adArticle }) {
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5002/api/admin/carousel-images')
+    fetch('https://openscroll-backend.onrender.com/api/admin/carousel-images')
       .then((res) => res.json())
       .then((data) => setImages(data.images || []));
   }, []);
