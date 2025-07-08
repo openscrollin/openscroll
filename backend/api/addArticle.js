@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.post('/', async (req, res) => {
   const authHeader = req.headers.authorization;
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'No token provided' });
   }
@@ -20,7 +21,19 @@ router.post('/', async (req, res) => {
   try {
     const db = mongoose.connection;
 
-    const { title, shortDesc, excerpt, body, price, authorName, authorEmail } = req.body;
+    const {
+      title,
+      shortDesc,
+      excerpt,
+      body,
+      price,
+      authorName,
+      authorEmail,
+      coverImage,
+      isPremium,
+      isPublished,
+    } = req.body;
+
     const desc = shortDesc || excerpt;
 
     if (!title || !desc || !body || !authorEmail) {
@@ -34,6 +47,9 @@ router.post('/', async (req, res) => {
       price: price || '0',
       authorName,
       authorEmail,
+      coverImage: coverImage || '',
+      isPremium: !!isPremium,
+      isPublished: !!isPublished,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

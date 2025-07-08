@@ -1,14 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import ReactQuill from 'react-quill';
-import { auth,storage } from './firebase';
+import { auth, storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-//import { getAuth } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function AddArticle() {
   const navigate = useNavigate();
   const quillRef = useRef(null);
+
+  const [firebaseUser, setFirebaseUser] = useState(null);
 
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -28,27 +30,34 @@ function AddArticle() {
     'Culture', 'Tutorial', 'Opinion', 'Other',
   ];
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("✅ Firebase User detected:", user);
+      setFirebaseUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    //const auth = getAuth();
-    const user = auth.currentUser;
-    console.log("🧪 Firebase User during upload:", user);
-    if (!user) {
+    if (!firebaseUser) {
       setError('You must be logged in to upload an image.');
       return;
     }
 
     setUploadingImage(true);
     setError('');
+
     try {
       const storageRef = ref(storage, `coverImages/${Date.now()}_${file.name}`);
       const snapshot = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(snapshot.ref);
       setCoverImage(downloadURL);
     } catch (err) {
-      console.error('Image upload failed:', err);
+      console.error('❌ Image upload failed:', err);
       setError('Failed to upload image. Please try again.');
     } finally {
       setUploadingImage(false);
@@ -129,11 +138,11 @@ function AddArticle() {
     container: {
       maxWidth: 1200,
       margin: '0 auto',
-      padding: '4rem 1rem 2rem', // Adjusted padding to match first code
+      padding: '4rem 1rem 2rem',
       minHeight: '100vh',
       background: '#07080a',
       fontFamily: "'Nunito Sans', sans-serif",
-      position: 'relative', // Added for potential future positioning
+      position: 'relative',
     },
     glass: {
       background: 'rgba(24,26,19,0.85)',
@@ -141,7 +150,7 @@ function AddArticle() {
       boxShadow: '0 4px 32px #d0f33011',
       border: '1.5px solid #d0f33022',
       padding: 24,
-      marginBottom: 0, // Added to ensure consistent spacing
+      marginBottom: 0,
     },
     neon: {
       boxShadow: '0 0 24px #d0f33055',
@@ -189,6 +198,8 @@ function AddArticle() {
       marginRight: 8,
     },
   };
+
+
 
   return (
     <div style={styles.container}>
