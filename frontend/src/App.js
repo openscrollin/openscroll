@@ -54,6 +54,7 @@ import PhoneLogin from './PhoneLogin';
 // Role Selection
 import RoleSelection from './RoleSelection'; // adjust the path if needed
 
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -183,6 +184,7 @@ function AppContent() {
 
         {/* Role Selection */}
         <Route path="/roles" element={<RoleSelection />} />
+      
 
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />

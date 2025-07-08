@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from './UserContext';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from './firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 function WriterLogin() {
   const [email, setEmail] = useState('');
@@ -41,6 +42,15 @@ function WriterLogin() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Login failed');
       if (data.user.role !== 'writer') throw new Error('This login is only for writers.');
+
+      // 🔽 Add Firebase Auth login here
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        // Optionally: console.log("✅ Firebase Auth login successful");
+      } catch (firebaseError) {
+        // Optionally: show a warning, but don't block backend login
+        console.warn("Firebase Auth login failed:", firebaseError.message);
+      }
 
       localStorage.removeItem('readerToken');
       localStorage.removeItem('openscroll_current_user');

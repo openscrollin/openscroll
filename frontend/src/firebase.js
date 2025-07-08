@@ -3,14 +3,14 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported as isAnalyticsSupported } from "firebase/analytics";
 import { getAuth, RecaptchaVerifier } from "firebase/auth";
-import { getStorage } from 'firebase/storage'; // ✅ make sure this is imported
+import { getStorage } from 'firebase/storage';
 
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBShlYC1nohKQwqBJAm5aBz5KXHcY3oMSU",
   authDomain: "openscroll-auth.firebaseapp.com",
   projectId: "openscroll-auth",
-  storageBucket: "openscroll-auth.appspot.com", // ✅ Use `.appspot.com` not `.firebasestorage.app`
+  storageBucket: "openscroll-auth.appspot.com", // ✅ Corrected storage bucket
   messagingSenderId: "986464804310",
   appId: "1:986464804310:web:34a8ce506fc74ce821d877",
   measurementId: "G-0JZKZREZE3"
@@ -23,7 +23,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 // ✅ Initialize Firebase Storage
-const storage = getStorage(app); // ✅ NOW it's defined
+const storage = getStorage(app);
 
 // ✅ Conditionally initialize Analytics
 let analytics = null;
@@ -40,7 +40,7 @@ isAnalyticsSupported().then((supported) => {
 export {
   app,
   auth,
-  storage,             // ✅ now correctly exported
+  storage,
   analytics,
   RecaptchaVerifier
 };
