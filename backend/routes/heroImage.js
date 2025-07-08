@@ -11,6 +11,13 @@ const upload = multer({ storage: multer.memoryStorage() });
 // POST: upload hero image
 router.post('/', adminAuth, upload.single('image'), async (req, res) => {
   try {
+    if (!req.file) return res.status(400).json({ error: 'No file provided' });
+    
+    if (!bucket) {
+      return res.status(500).json({ 
+        error: 'Firebase Storage not configured. Please set up Firebase credentials.' 
+      });
+    }
     const filename = `hero/${uuidv4()}_${req.file.originalname}`;
     const file = bucket.file(filename);
 
