@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import ArticleCard from './ArticleCard';
 import LoginPromoModal from './components/LoginPromptModal';
+import Loader from './components/Loader';
 
 function Articles() {
   const [articles, setArticles] = useState([]);
@@ -41,6 +42,10 @@ function Articles() {
       return matchesSearch && matchesFilter && matchesCategory;
     });
   }, [articles, search, filter, category]);
+
+  if (loading) {
+    return <Loader message="Loading articles..." type="articles" />;
+  }
 
   return (
     <div className="cyber-bg">

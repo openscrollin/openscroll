@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReaderNavbar from '../ReaderNavbar';
+import Loader from '../components/Loader';
 
 function ReaderDashboard() {
   const navigate = useNavigate();
   const [unlockedArticles, setUnlockedArticles] = useState([]);
   const [articlesData, setArticlesData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unlocked = JSON.parse(localStorage.getItem('openscroll_unlocked_articles')) || [];
@@ -20,6 +22,8 @@ function ReaderDashboard() {
         setArticlesData(data);
       } catch (error) {
         console.error('Error fetching articles:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -34,6 +38,10 @@ function ReaderDashboard() {
     const price = parseFloat(a.price);
     return sum + (isNaN(price) ? 0 : price);
   }, 0);
+
+  if (loading) {
+    return <Loader message="Loading dashboard..." type="dashboard" />;
+  }
 
   return (
     <>

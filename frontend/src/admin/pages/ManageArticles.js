@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Loader from '../../components/Loader';
 
 function ManageArticles() {
   const [articles, setArticles] = useState([]);
@@ -120,7 +121,7 @@ function ManageArticles() {
       </div>
 
       {loading ? (
-        <p>Loading articles...</p>
+        <Loader type="articles" message="Loading articles..." />
       ) : (
         <table style={tableStyle}>
           <thead>

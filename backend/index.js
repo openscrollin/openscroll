@@ -18,6 +18,7 @@ const aiEnhanceRoute = require('./routes/aiEnhance');
 const heroImageRoutes = require('./routes/heroImage');
 const carouselRoutes = require('./routes/carouselRoutes');
 const addArticleRoute = require('./api/addArticle'); // ✅ Added
+const ttsRoutes = require('./routes/tts'); // ✅ Added TTS routes
 
 const app = express();
 const PORT = process.env.PORT || 5002;
@@ -61,6 +62,7 @@ app.use('/api/admin/carousel-images', carouselRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin', adminAuthRoutes);
 app.use('/api/addArticle', addArticleRoute); // ✅ Mounted addArticle
+app.use('/api/tts', ttsRoutes); // ✅ Added TTS routes
 
 // ✅ Root route
 app.get('/', (req, res) => {

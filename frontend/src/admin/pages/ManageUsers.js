@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Loader from '../../components/Loader';
 
 function ManageUsers() {
   const [activeTab, setActiveTab] = useState('readers');
@@ -91,7 +92,7 @@ function ManageUsers() {
       </div>
 
       {loading ? (
-        <p>Loading {activeTab}...</p>
+        <Loader message={`Loading ${activeTab}...`} type="dashboard" />
       ) : (
         <table style={tableStyle}>
           <thead>

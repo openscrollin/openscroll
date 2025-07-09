@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Loader from './components/Loader';
 
 function WriterDashboard() {
   const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [earnings, setEarnings] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const writer = JSON.parse(localStorage.getItem('openscroll_current_user'));
@@ -21,8 +23,10 @@ function WriterDashboard() {
       .then((data) => {
         setArticles(data.articles || []);
         setEarnings(data.totalEarnings || 0);
+        setLoading(false);
       })
       .catch(() => {
+        setLoading(false);
         navigate('/writer/login');
       });
   }, [navigate]);
@@ -63,6 +67,10 @@ function WriterDashboard() {
       color: '#4ade80',
     },
   ];
+
+  if (loading) {
+    return <Loader message="Loading dashboard..." type="dashboard" />;
+  }
 
   return (
     <div style={{ padding: '5rem 2rem 2rem 2rem', minHeight: '100vh', background: '#07080a', fontFamily: "'Nunito Sans', sans-serif" }}>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import Loader from './components/Loader';
 
 // Minimal icons for this project (replace with your own or a library if needed)
 const Eye = () => <span role="img" aria-label="views"></span>;
@@ -117,6 +118,10 @@ function ManageArticles() {
       minimumFractionDigits: 0,
     }).format(amount || 0);
   };
+
+  if (loading) {
+    return <Loader message="Loading articles..." type="dashboard" />;
+  }
 
   return (
     <div style={{ padding: '2rem', minHeight: '100vh', background: '#07080a', fontFamily: "'Nunito Sans', sans-serif" }}>

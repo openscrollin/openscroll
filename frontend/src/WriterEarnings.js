@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Loader from './components/Loader';
 
 // Simple Line Chart using Chart.js (requires chart.js and react-chartjs-2)
 import { Line } from 'react-chartjs-2';
@@ -96,6 +97,10 @@ function WriterEarnings() {
     },
   };
 
+  if (loading) {
+    return <Loader message="Loading earnings..." type="dashboard" />;
+  }
+
   return (
     <div style={{ padding: '2rem', minHeight: '100vh', background: '#07080a', fontFamily: "'Nunito Sans', sans-serif" }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
@@ -124,7 +129,7 @@ function WriterEarnings() {
         </Link>
       </div>
       {loading ? (
-        <div style={{ color: '#b6c2b6', textAlign: 'center', marginTop: 40 }}>Loading...</div>
+        <Loader type="dashboard" message="Loading earnings data..." />
       ) : (
         <>
           <div style={{

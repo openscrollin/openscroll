@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import WriterNavbar from './WriterNavbar';
 import TextEditorWithAI from './TextEditorWithAI'; // ✅ AI Editor added
+import Loader from './components/Loader';
 
 function NewArticle() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ function NewArticle() {
   const [price, setPrice] = useState('');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -23,15 +25,18 @@ function NewArticle() {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
+    setLoading(true);
 
     if (!title.trim() || !shortDesc.trim() || !body.trim()) {
       setError('Please fill all the fields.');
+      setLoading(false);
       return;
     }
 
     const writerData = JSON.parse(localStorage.getItem('openscroll_current_writer'));
     if (!writerData) {
       setError('Writer not logged in.');
+      setLoading(false);
       return;
     }
 
@@ -76,6 +81,8 @@ function NewArticle() {
     } catch (err) {
       console.error(err);
       setError('Something went wrong.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,6 +162,10 @@ function NewArticle() {
     textAlign: 'center',
     marginTop: '1rem',
   };
+
+  if (loading) {
+    return <Loader message="Publishing article..." type="form" />;
+  }
 
   return (
     <>

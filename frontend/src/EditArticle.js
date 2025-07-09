@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import Loader from './components/Loader';
 
 function EditArticle() {
   const { id } = useParams();
@@ -56,7 +57,7 @@ function EditArticle() {
     }
   };
 
-  if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (loading) return <Loader type="article" message="Loading article..." />;
   if (!article) return <div style={{ padding: '2rem' }}>❌ Article not found</div>;
 
   // UI Styles

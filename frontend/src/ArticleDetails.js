@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion'; // Import motion for animations
 import TextToSpeechButton from './components/TextToSpeechButton';
+import Loader from './components/Loader';
 
 // --- CYBER BACKGROUND STYLES ---
 const pageWrapperStyle = {
@@ -238,12 +239,11 @@ const glassmorphismBox = {
   textAlign: 'center',
   maxWidth: '90%',
   width: 'auto',
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
+  position: 'fixed', //changed
+  top: '0%',
+  left: '0%',
   transform: 'translate(-50%, -50%)',
-  zIndex: 10, // Ensure it's on top of blurred content
-  color: '#d0f330',
+  zIndex: 9999, // Ensure it's on top of blurred content, old was 10
   fontSize: '1.2rem',
   fontWeight: '600',
 };
@@ -272,7 +272,7 @@ const glassmorphismButtonHoverProps = {
 };
 
 // Mobile-specific styles (inline)
-const mobileContainerStyle = { ...containerStyle, padding: '0 0.5rem' };
+const mobileContainerStyle = { ...containerStyle, padding: '0 0.5rem', marginTop: '2rem' };
 const mobileHeadingStyle = { ...headingStyle, fontSize: '2rem' };
 const mobileSummaryStyle = { ...summaryStyle, fontSize: '1rem' };
 const mobileShareRowStyle = { ...shareRowStyle, flexDirection: 'column', alignItems: 'center' };
@@ -373,7 +373,7 @@ function ArticleDetails() {
     return (
         <div style={{...pageWrapperStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={cyberBgBeforeStyle}></div>
-            <div style={{ color: '#d0f330', fontSize: '1.5rem', zIndex: 2 }}>Loading article...</div>
+            <Loader message="Loading article..." type="article" />
         </div>
     );
   }
@@ -415,17 +415,29 @@ function ArticleDetails() {
                   <>
                     {renderBodyWithDropCap(previewContent)}
                     {remainingContent && (
-                      <div style={{ position: 'relative' }}>
-                        {/* Glassmorphism lock overlay */}
-                        <motion.div
-                          style={isMobile ? mobileLockedOverlayStyle : glassmorphismBox}
-                          initial={{ opacity: 0, y: 50 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.5 }}
+                      <div>
+                        {/* Inline lock card that appears after the preview */}
+                        <div
+                          style={{
+                            ...glassmorphismBox,
+                            position: 'relative',     // instead of fixed/absolute
+                            marginTop: '1rem',
+                            marginBottom: '1rem',
+                            transform: 'none',        // remove translate
+                            left: 'unset',
+                            top: 'unset',
+                            maxWidth: '100%',         // full width for inline display
+                            width: 'auto',
+                            zIndex: 1,                // normal z-index
+                          }}
                         >
-                          {/* Specific styles for locked message text as per File A */}
-                          <p style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#d0f330' }}>This article is locked</p>
-                          <p style={{ marginBottom: '0.5rem', color: '#ccc' }}>Price: ₹{article.price}</p>
+                          {/* Specific styles for locked message text */}
+                          <p style={{ fontSize: '1.2rem', fontWeight: '600', marginBottom: '0.5rem', color: '#d0f330' }}>
+                            This article is locked
+                          </p>
+                          <p style={{ marginBottom: '0.5rem', color: '#ccc' }}>
+                            Price: ₹{article.price}
+                          </p>
                           <motion.button
                             onClick={handleUnlock}
                             style={glassmorphismButton}
@@ -434,10 +446,34 @@ function ArticleDetails() {
                           >
                             Unlock Now
                           </motion.button>
-                        </motion.div>
-                        {/* Blurred content beneath overlay with more complete styling from File A */}
-                        <div style={{ filter: 'blur(6px)', pointerEvents: 'none', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', color: '#e0e0e0' }}>
+                        </div>
+                        {/* Blurred content beneath the inline lock card */}
+                        <div
+                          style={{
+                            maxHeight: '300px',
+                            overflow: 'hidden',
+                            filter: 'blur(6px)',
+                            pointerEvents: 'none',
+                            background: 'rgba(255,255,255,0.02)',
+                            padding: '1rem',
+                            borderRadius: '8px',
+                            color: '#e0e0e0',
+                            position: 'relative',
+                          }}
+                        >
                           <p style={bodyStyle}>{remainingContent}</p>
+                          {/* Fade-out effect at the bottom */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: '60px',
+                              background: 'linear-gradient(to bottom, transparent, rgba(15, 15, 30, 0.9))',
+                              pointerEvents: 'none',
+                            }}
+                          />
                         </div>
                       </div>
                     )}

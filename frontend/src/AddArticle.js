@@ -5,6 +5,7 @@ import ReactQuill from 'react-quill';
 import { auth, storage } from './firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged } from 'firebase/auth';
+import Loader from './components/Loader';
 
 function AddArticle() {
   const navigate = useNavigate();
@@ -41,34 +42,31 @@ function AddArticle() {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    // Check if user is authenticated
-    const writerData = JSON.parse(localStorage.getItem('openscroll_current_user'));
-    if (!writerData) {
-      setError('You must be logged in to upload an image.');
+    if (!file) {
+      setError('No file selected.');
       return;
     }
 
     setUploadingImage(true);
     setError('');
+    setSuccessMessage('');
 
     try {
       // Create a unique filename
       const timestamp = Date.now();
       const fileName = `${timestamp}_${file.name}`;
       const storageRef = ref(storage, `coverImages/${fileName}`);
-      
-      console.log('📤 Uploading image to Firebase Storage...');
-      
+
+      console.log('📤 Uploading image to Firebase Storage...', fileName);
+
       // Upload the file
       const snapshot = await uploadBytes(storageRef, file);
       console.log('✅ Image uploaded successfully:', snapshot);
-      
+
       // Get the download URL
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      const downloadURL = await getDownloadURL(storageRef);
       console.log('✅ Download URL obtained:', downloadURL);
-      
+
       setCoverImage(downloadURL);
       setSuccessMessage('Image uploaded successfully!');
       setTimeout(() => setSuccessMessage(''), 3000);
@@ -214,6 +212,14 @@ function AddArticle() {
       marginRight: 8,
     },
   };
+
+  if (saving) {
+    return <Loader message="Saving article..." type="form" />;
+  }
+
+  if (publishing) {
+    return <Loader message="Publishing article..." type="form" />;
+  }
 
   return (
     <div style={styles.container}>

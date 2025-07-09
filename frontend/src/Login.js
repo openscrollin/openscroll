@@ -4,6 +4,7 @@ import API_BASE_URL from './config';
 import { UserContext } from './UserContext';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from './firebase';
+import Loader from './components/Loader';
 
 function Login() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -24,6 +26,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -52,11 +55,14 @@ function Login() {
       }
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    setLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
@@ -74,8 +80,14 @@ function Login() {
     } catch (error) {
       console.error('Google login failed:', error);
       setError('Google login failed');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return <Loader message="Logging in..." type="form" />;
+  }
 
   return (
     <div style={container(isMobile)}>

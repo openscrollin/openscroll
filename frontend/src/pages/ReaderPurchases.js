@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import ReaderNavbar from '../ReaderNavbar';
+import Loader from '../components/Loader';
 
 function ReaderPurchases() {
   const [purchases, setPurchases] = useState([]);
@@ -79,37 +80,39 @@ function ReaderPurchases() {
   return (
     <>
       <ReaderNavbar />
-      <div style={container}>
-        <h2 style={heading}>Your Purchases</h2>
+      {loading ? (
+        <Loader message="Loading purchases..." type="dashboard" />
+      ) : (
+        <div style={container}>
+          <h2 style={heading}>Your Purchases</h2>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : purchases.length === 0 ? (
-          <p style={{ color: '#374151', fontSize: '1.1rem' }}>
-            You haven't purchased any articles yet.
-          </p>
-        ) : (
-          purchases.map((article) => (
-            <div key={article._id} style={card}>
-              <div>
-                <h3 style={{ margin: '0 0 0.5rem' }}>{article.title}</h3>
-                <p style={meta}>
-                  Category: <strong>{article.category}</strong> | Price: ₹
-                  {article.price === '0' ? 'Free' : article.price}
-                </p>
-                <p style={{ ...meta, fontSize: '0.85rem' }}>
-                  Unlocked on: {new Date(article.unlockedAt).toLocaleDateString()}
-                </p>
+          {purchases.length === 0 ? (
+            <p style={{ color: '#374151', fontSize: '1.1rem' }}>
+              You haven't purchased any articles yet.
+            </p>
+          ) : (
+            purchases.map((article) => (
+              <div key={article._id} style={card}>
+                <div>
+                  <h3 style={{ margin: '0 0 0.5rem' }}>{article.title}</h3>
+                  <p style={meta}>
+                    Category: <strong>{article.category}</strong> | Price: ₹
+                    {article.price === '0' ? 'Free' : article.price}
+                  </p>
+                  <p style={{ ...meta, fontSize: '0.85rem' }}>
+                    Unlocked on: {new Date(article.unlockedAt).toLocaleDateString()}
+                  </p>
+                </div>
+                <div>
+                  <Link to={`/articles/${article._id}`}>
+                    <button style={readBtn}>Read Again</button>
+                  </Link>
+                </div>
               </div>
-              <div>
-                <Link to={`/articles/${article._id}`}>
-                  <button style={readBtn}>Read Again</button>
-                </Link>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      )}
     </>
   );
 }

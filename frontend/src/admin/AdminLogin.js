@@ -1,16 +1,19 @@
 // frontend/src/pages/AdminLogin.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Loader from '../components/Loader';
 
 function AdminLogin() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch('https://openscroll-backend.onrender.com/api/admin/login', {
@@ -30,8 +33,14 @@ function AdminLogin() {
     } catch (err) {
       console.error('Login error:', err);
       setError('Something went wrong');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return <Loader message="Logging in..." type="form" />;
+  }
 
   return (
     <div style={{

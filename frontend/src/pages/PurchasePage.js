@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import Loader from '../components/Loader';
 
 function PurchasePage() {
   const { id: articleId } = useParams();
   const [price, setPrice] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     localStorage.setItem('pending_article_id', articleId);
@@ -38,11 +40,17 @@ function PurchasePage() {
       } catch (err) {
         console.error('❌ Error during payment:', err);
         alert('Something went wrong while starting payment.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchPriceAndPay();
   }, [articleId]);
+
+  if (loading) {
+    return <Loader message="Processing payment..." type="default" />;
+  }
 
   return (
     <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'Nunito Sans' }}>

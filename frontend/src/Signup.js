@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth } from './firebase';
 import { UserContext } from './UserContext';
+import Loader from './components/Loader';
 
 function Signup() {
   const [fullName, setFullName] = useState('');
@@ -12,6 +13,7 @@ function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const navigate = useNavigate();
 
@@ -28,14 +30,17 @@ function Signup() {
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!fullName || !email || !password || !confirmPassword) {
       setError('Please fill all fields.');
+      setLoading(false);
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
+      setLoading(false);
       return;
     }
 
@@ -57,11 +62,14 @@ function Signup() {
       navigate('/reader/dashboard');
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleSignup = async () => {
     const provider = new GoogleAuthProvider();
+    setLoading(true);
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
@@ -74,8 +82,14 @@ function Signup() {
       navigate('/reader/dashboard');
     } catch (error) {
       setError('Google signup failed');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return <Loader message="Creating account..." type="form" />;
+  }
 
   return (
     <div style={container(isMobile)}>

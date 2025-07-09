@@ -201,7 +201,7 @@ function LoginPromoModal({ onClose, adArticle }) {
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5002/api/admin/carousel-images')
+    fetch('https://openscroll-backend.onrender.com/api/admin/carousel-images')
       .then((res) => res.json())
       .then((data) => setImages(data.images || []));
   }, []);
@@ -229,6 +229,10 @@ function LoginPromoModal({ onClose, adArticle }) {
                   style={hovered ? { ...actionBtn, ...actionBtnHover } : actionBtn}
                   onMouseEnter={() => setHovered(true)}
                   onMouseLeave={() => setHovered(false)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate('/login');
+                  }}
                   whileHover={{ scale: 1.07, boxShadow: "0 0 24px #d0f330" }}
                   whileTap={{ scale: 0.96 }}
                 >
@@ -269,7 +273,10 @@ function LoginPromoModal({ onClose, adArticle }) {
         <div style={buttonRow}>
           <motion.button
             style={googleBtn}
-            onClick={() => navigate('/signup')}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate('/signup');
+            }}
             whileHover={{ scale: 1.07, boxShadow: "0 0 24px #d0f330" }}
             whileTap={{ scale: 0.96 }}
           >
@@ -277,7 +284,10 @@ function LoginPromoModal({ onClose, adArticle }) {
           </motion.button>
           <motion.button
             style={loginBtn}
-            onClick={() => navigate('/login')}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate('/login');
+            }}
             whileHover={{ scale: 1.07, boxShadow: "0 0 24px #fff" }}
             whileTap={{ scale: 0.96 }}
           >
